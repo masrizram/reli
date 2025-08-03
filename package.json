@@ -1,0 +1,24 @@
+{
+    "name": "reli-mvp",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "RELI - Rangkuman Earnings Lintas-Industri MVP",
+    "main": "index.html",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "deploy": "npm run build && gh-pages -d dist"
+    },
+    "dependencies": {
+        "daisyui": "^4.12.10",
+        "tailwindcss": "^3.4.4"
+    },
+    "devDependencies": {
+        "vite": "^5.3.4",
+        "prettier": "^3.0.0",
+        "gh-pages": "^6.0.0"
+    }
+}
