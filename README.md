@@ -13,6 +13,7 @@
 - **Multi-Platform**: Support Grab, Maxim, Gojek, Indrive
 - **Perhitungan Otomatis**: Real-time calculation saat input data
 - **Kirim WhatsApp**: Export catatan harian ke WhatsApp pribadi
+- **Smart Notifications**: Pengingat cerdas dan rekomendasi
 - **PWA Ready**: Bisa diinstall di mobile device
 - **Responsive**: Optimized untuk mobile dan desktop
 
@@ -47,8 +48,9 @@ npm run deploy
 
 1. **Input Data Platform**: Masukkan top-up dan sisa saldo untuk setiap platform
 2. **Input Data BBM**: Masukkan jarak tempuh, konsumsi, dan harga BBM
-3. **Lihat Hasil**: Aplikasi akan menghitung otomatis pendapatan bersih
-4. **Kirim WhatsApp**: Klik tombol kirim untuk export ke WhatsApp
+3. **Atur Smart Notifications**: Konfigurasi pengingat dan notifikasi cerdas
+4. **Lihat Hasil**: Aplikasi akan menghitung otomatis pendapatan bersih
+5. **Kirim WhatsApp**: Klik tombol kirim untuk export ke WhatsApp
 
 ## 🎯 Formula Perhitungan
 
@@ -64,7 +66,7 @@ Pendapatan Bersih = Total Kotor - Biaya BBM
 Project ini menggunakan Atomic Design Pattern:
 
 - **Atoms**: Button, Input, Label
-- **Molecules**: PlatformInput, FuelInput
+- **Molecules**: PlatformInput, FuelInput, AdditionalCosts, AnalyticsDashboard, SmartNotifications
 - **Organisms**: App (main component)
 
 ## 🚀 Deployment

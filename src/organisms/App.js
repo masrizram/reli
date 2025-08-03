@@ -2,6 +2,7 @@ import { PlatformInput } from '../molecules/PlatformInput.js'
 import { FuelInput } from '../molecules/FuelInput.js'
 import { AdditionalCosts } from '../molecules/AdditionalCosts.js'
 import { AnalyticsDashboard } from '../molecules/AnalyticsDashboard.js'
+import { SmartNotifications } from '../molecules/SmartNotifications.js'
 import { Button } from '../atoms/Button.js'
 import { StorageManager } from '../utils/storage.js'
 
@@ -51,6 +52,7 @@ export class App {
         this.fuelInput = new FuelInput(this.updateFuel.bind(this))
         this.additionalCostsInput = new AdditionalCosts(this.updateAdditionalCosts.bind(this))
         this.analyticsDashboard = new AnalyticsDashboard()
+        this.smartNotifications = new SmartNotifications(this.onNotificationSettingsUpdate.bind(this))
         this.calculateButton = new Button('💰 Hitung Ulang', this.calculate.bind(this))
         this.saveButton = new Button('📱 Kirim ke WhatsApp', this.saveNotes.bind(this), 'btn-secondary')
         this.exportButton = new Button('📊 Export CSV', this.exportData.bind(this), 'btn-accent')
@@ -70,6 +72,11 @@ export class App {
         this.additionalCosts = data
         this.additionalCostsInput.updateTotalDisplay(data.total)
         this.calculate()
+    }
+
+    onNotificationSettingsUpdate(settings) {
+        // Handle notification settings updates if needed
+        console.log('Notification settings updated:', settings)
     }
 
     loadTodayData() {
@@ -106,6 +113,16 @@ export class App {
 
         this.updateResults()
         this.saveToStorage()
+
+        // Check for low fuel warning
+        try {
+            const totalBalance = Object.values(this.platforms).reduce((sum, platform) => sum + platform.sisa, 0)
+            if (this.smartNotifications && typeof this.smartNotifications.checkLowFuelWarning === 'function') {
+                this.smartNotifications.checkLowFuelWarning(totalBalance)
+            }
+        } catch (error) {
+            console.error('Error checking low fuel warning:', error)
+        }
     }
 
     saveToStorage() {
@@ -302,6 +319,9 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
 
         // Additional costs input
         container.appendChild(this.additionalCostsInput.render())
+
+        // Smart notifications
+        container.appendChild(this.smartNotifications.render())
 
         // Results section
         const resultsSection = document.createElement('div')
