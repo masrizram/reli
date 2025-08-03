@@ -1,0 +1,105 @@
+{
+  "name": "RELI - Rangkuman Earnings Lintas-Industri",
+  "short_name": "RELI",
+  "description": "Aplikasi kalkulator pendapatan driver ojol multi-platform dengan AI analytics dan GPS tracking",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1f2937",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "finance", "business"],
+  "lang": "id",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Input Data Harian",
+      "short_name": "Input Data",
+      "description": "Langsung ke halaman input data pendapatan",
+      "url": "/#input",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Lihat Analytics",
+      "short_name": "Analytics",
+      "description": "Lihat analisis pendapatan dan insights",
+      "url": "/#analytics",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "GPS Tracking",
+      "short_name": "GPS",
+      "description": "Aktifkan GPS tracking untuk jarak otomatis",
+      "url": "/#gps",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Kirim WhatsApp",
+      "short_name": "WhatsApp",
+      "description": "Export catatan harian ke WhatsApp",
+      "url": "/#whatsapp",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "RELI Mobile Interface"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "RELI Desktop Interface"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "scope": "/",
+  "id": "reli-ojol-calculator",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "handle_links": "preferred",
+  "capture_links": "existing-client-navigate"
+}

@@ -3,6 +3,10 @@ import { FuelInput } from '../molecules/FuelInput.js'
 import { AdditionalCosts } from '../molecules/AdditionalCosts.js'
 import { AnalyticsDashboard } from '../molecules/AnalyticsDashboard.js'
 import { SmartNotifications } from '../molecules/SmartNotifications.js'
+import { LocationFeatures } from '../molecules/LocationFeatures.js'
+import { AdvancedAnalytics } from '../molecules/AdvancedAnalytics.js'
+import { EarningsOptimizer } from '../molecules/EarningsOptimizer.js'
+import { AutomationHub } from '../molecules/AutomationHub.js'
 import { Button } from '../atoms/Button.js'
 import { StorageManager } from '../utils/storage.js'
 
@@ -53,6 +57,10 @@ export class App {
         this.additionalCostsInput = new AdditionalCosts(this.updateAdditionalCosts.bind(this))
         this.analyticsDashboard = new AnalyticsDashboard()
         this.smartNotifications = new SmartNotifications(this.onNotificationSettingsUpdate.bind(this))
+        this.locationFeatures = new LocationFeatures(this.onLocationUpdate.bind(this))
+        this.advancedAnalytics = new AdvancedAnalytics()
+        this.earningsOptimizer = new EarningsOptimizer()
+        this.automationHub = new AutomationHub(this.onAutomationUpdate.bind(this))
         this.calculateButton = new Button('💰 Hitung Ulang', this.calculate.bind(this))
         this.saveButton = new Button('📱 Kirim ke WhatsApp', this.saveNotes.bind(this), 'btn-secondary')
         this.exportButton = new Button('📊 Export CSV', this.exportData.bind(this), 'btn-accent')
@@ -77,6 +85,21 @@ export class App {
     onNotificationSettingsUpdate(settings) {
         // Handle notification settings updates if needed
         console.log('Notification settings updated:', settings)
+    }
+
+    onLocationUpdate(data) {
+        if (data.type === 'distance' && data.distance) {
+            // Update fuel input with GPS distance
+            this.fuel.jarak = data.distance
+            this.fuelInput.jarakInput.setValue(data.distance.toString())
+            this.fuelInput.calculateAndUpdate()
+            this.calculate()
+        }
+    }
+
+    onAutomationUpdate(automations) {
+        console.log('Automation settings updated:', automations)
+        // Handle automation updates if needed
     }
 
     loadTodayData() {
@@ -317,11 +340,23 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
         // Fuel input
         container.appendChild(this.fuelInput.render())
 
+        // Location features
+        container.appendChild(this.locationFeatures.render())
+
         // Additional costs input
         container.appendChild(this.additionalCostsInput.render())
 
         // Smart notifications
         container.appendChild(this.smartNotifications.render())
+
+        // Advanced Analytics
+        container.appendChild(this.advancedAnalytics.render())
+
+        // Earnings Optimizer
+        container.appendChild(this.earningsOptimizer.render())
+
+        // Automation Hub
+        container.appendChild(this.automationHub.render())
 
         // Results section
         const resultsSection = document.createElement('div')
@@ -343,6 +378,77 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
         buttonContainer.appendChild(this.exportButton.render())
         container.appendChild(buttonContainer)
 
+        // Add automation event listeners
+        this.setupAutomationListeners()
+
         return container
+    }
+
+    setupAutomationListeners() {
+        // Auto-calculate listener
+        document.addEventListener('reli-auto-calculate', () => {
+            this.calculate()
+        })
+
+        // Auto-save listener
+        document.addEventListener('reli-auto-save', () => {
+            this.saveToStorage()
+        })
+
+        // Auto-optimize listener
+        document.addEventListener('reli-auto-optimize', () => {
+            // Trigger optimization analysis
+            if (this.earningsOptimizer) {
+                const recommendations = this.earningsOptimizer.generateOptimizationRecommendations()
+                if (recommendations.length > 0) {
+                    const topRec = recommendations[0]
+                    this.showOptimizationAlert(topRec.title, topRec.message)
+                }
+            }
+        })
+
+        // Auto-sync listener
+        document.addEventListener('reli-auto-sync', () => {
+            // Simulate cloud sync
+            this.syncToCloud()
+        })
+    }
+
+    showOptimizationAlert(title, message) {
+        const alert = document.createElement('div')
+        alert.className = 'optimization-alert fixed top-4 left-4 alert alert-info shadow-lg max-w-sm z-50'
+        alert.innerHTML = `
+            <div class="flex items-start gap-3">
+                <span class="text-xl">🚀</span>
+                <div>
+                    <div class="font-bold text-sm">${title}</div>
+                    <div class="text-xs mt-1">${message}</div>
+                </div>
+                <button class="btn btn-sm btn-circle btn-ghost" onclick="this.closest('.optimization-alert').remove()">✕</button>
+            </div>
+        `
+        
+        document.body.appendChild(alert)
+        
+        setTimeout(() => {
+            if (alert.parentElement) {
+                alert.remove()
+            }
+        }, 8000)
+    }
+
+    syncToCloud() {
+        // Simulate cloud sync (in real app, sync with actual cloud service)
+        const data = {
+            timestamp: new Date().toISOString(),
+            platforms: this.platforms,
+            fuel: this.fuel,
+            additionalCosts: this.additionalCosts,
+            results: this.results
+        }
+        
+        // Store in localStorage as "cloud" backup
+        localStorage.setItem('reli-cloud-sync', JSON.stringify(data))
+        console.log('Data synced to cloud:', data)
     }
 }

@@ -194,12 +194,136 @@ export class SmartNotifications {
         const currentPeakHours = isWeekend ? peakHours.weekend : peakHours.weekday
 
         if (currentPeakHours.includes(hour)) {
-            this.showNotification(
+            this.showLocationAwareNotification(
                 '🚀 RELI - Waktu Optimal',
                 `Ini waktu peak hour! Peluang order tinggi. Yuk mulai kerja!`,
-                'best-time'
+                'best-time',
+                'hotspot'
             )
         }
+    }
+
+    showLocationAwareNotification(title, body, tag, actionType = null) {
+        // Show regular notification first
+        this.showNotification(title, body, tag)
+        
+        // Add location-based action if available
+        if (actionType && 'geolocation' in navigator) {
+            setTimeout(() => {
+                this.showLocationActionNotification(title, body, actionType)
+            }, 2000)
+        }
+    }
+
+    showLocationActionNotification(title, body, actionType) {
+        // Remove any existing location notifications
+        const existing = document.querySelectorAll('.reli-location-notification')
+        existing.forEach(n => n.remove())
+
+        const notification = document.createElement('div')
+        notification.className = 'reli-location-notification alert alert-success shadow-lg fixed top-20 right-4 z-50 max-w-sm'
+        notification.style.cssText = `
+            animation: slideInRight 0.3s ease-out;
+            z-index: 9998;
+        `
+
+        let actionButton = ''
+        let actionText = ''
+
+        switch (actionType) {
+            case 'hotspot':
+                actionButton = `<button class="btn btn-xs btn-primary maps-action" data-action="hotspot">🗺️ Lihat Hotspot</button>`
+                actionText = 'Cek area hotspot terdekat?'
+                break
+            case 'fuel':
+                actionButton = `<button class="btn btn-xs btn-warning maps-action" data-action="fuel">⛽ Cari SPBU</button>`
+                actionText = 'Cari SPBU terdekat?'
+                break
+            case 'parking':
+                actionButton = `<button class="btn btn-xs btn-info maps-action" data-action="parking">🅿️ Cari Parkir</button>`
+                actionText = 'Cari tempat parkir?'
+                break
+        }
+
+        notification.innerHTML = `
+            <div class="flex items-start gap-3">
+                <div class="text-2xl">📍</div>
+                <div class="flex-1">
+                    <div class="text-xs font-medium">${actionText}</div>
+                    <div class="flex gap-2 mt-2">
+                        ${actionButton}
+                        <button class="btn btn-xs btn-ghost" onclick="this.closest('.reli-location-notification').remove()">Nanti</button>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-circle btn-ghost" onclick="this.closest('.reli-location-notification').remove()">✕</button>
+            </div>
+        `
+
+        document.body.appendChild(notification)
+
+        // Add event listener for maps action
+        const mapsBtn = notification.querySelector('.maps-action')
+        if (mapsBtn) {
+            mapsBtn.onclick = () => {
+                this.handleMapsAction(mapsBtn.dataset.action)
+                notification.remove()
+            }
+        }
+
+        // Auto remove after 10 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.animation = 'slideOutRight 0.3s ease-in'
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove()
+                    }
+                }, 300)
+            }
+        }, 10000)
+    }
+
+    handleMapsAction(action) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude
+                const lng = position.coords.longitude
+                let mapsUrl = ''
+
+                switch (action) {
+                    case 'hotspot':
+                        // Open maps showing current location for hotspot analysis
+                        mapsUrl = `https://www.google.com/maps/@${lat},${lng},15z`
+                        break
+                    case 'fuel':
+                        mapsUrl = `https://www.google.com/maps/search/SPBU/@${lat},${lng},15z`
+                        break
+                    case 'parking':
+                        mapsUrl = `https://www.google.com/maps/search/parkir/@${lat},${lng},15z`
+                        break
+                }
+
+                if (mapsUrl) {
+                    window.open(mapsUrl, '_blank')
+                    this.showInAppNotification(
+                        '🗺️ Maps Dibuka',
+                        `Google Maps dibuka untuk: ${action}`
+                    )
+                }
+            },
+            (error) => {
+                console.error('Geolocation error:', error)
+                // Fallback to general search
+                let query = ''
+                switch (action) {
+                    case 'fuel': query = 'SPBU'; break
+                    case 'parking': query = 'parkir'; break
+                    default: query = 'lokasi saya'
+                }
+                const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(query)}`
+                window.open(mapsUrl, '_blank')
+            }
+        )
     }
 
     async checkWeatherRecommendation() {
@@ -552,10 +676,20 @@ render() {
         this.markMaintenanceDone()
     })
 
+    const quickMapsButton = document.createElement('button')
+    quickMapsButton.className = 'btn btn-success btn-sm'
+    quickMapsButton.innerHTML = '🗺️ Quick Maps'
+    quickMapsButton.style.minWidth = '100px'
+    quickMapsButton.addEventListener('click', (e) => {
+        e.preventDefault()
+        this.showQuickMapsModal()
+    })
+
     buttonContainer.appendChild(saveButton)
     buttonContainer.appendChild(testButton)
     buttonContainer.appendChild(statusButton)
     buttonContainer.appendChild(maintenanceButton)
+    buttonContainer.appendChild(quickMapsButton)
     container.appendChild(buttonContainer)
 
     return container
@@ -670,5 +804,113 @@ showTestNotification() {
             console.error('Error showing test notification:', error)
             alert('❌ Error: ' + error.message + '\n\nCoba refresh halaman dan test lagi.')
         }
+    }
+
+    showQuickMapsModal() {
+        const modal = document.createElement('div')
+        modal.className = 'modal modal-open'
+        modal.innerHTML = `
+            <div class="modal-box">
+                <h3 class="font-bold text-lg mb-4">🗺️ Quick Maps Access</h3>
+                <p class="text-sm opacity-70 mb-4">Akses cepat ke Google Maps untuk berbagai kebutuhan driver</p>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="btn btn-outline quick-map-btn" data-search="SPBU">
+                        ⛽ SPBU Terdekat
+                    </button>
+                    <button class="btn btn-outline quick-map-btn" data-search="parkir">
+                        🅿️ Tempat Parkir
+                    </button>
+                    <button class="btn btn-outline quick-map-btn" data-search="restoran">
+                        🍽️ Restoran
+                    </button>
+                    <button class="btn btn-outline quick-map-btn" data-search="ATM">
+                        🏧 ATM
+                    </button>
+                    <button class="btn btn-outline quick-map-btn" data-search="bengkel motor">
+                        🔧 Bengkel Motor
+                    </button>
+                    <button class="btn btn-outline quick-map-btn" data-search="rumah sakit">
+                        🏥 Rumah Sakit
+                    </button>
+                    <button class="btn btn-outline quick-map-btn" data-search="mall">
+                        🏬 Mall
+                    </button>
+                    <button class="btn btn-outline quick-map-btn" data-search="minimarket">
+                        🏪 Minimarket
+                    </button>
+                </div>
+
+                <div class="divider">Atau</div>
+                
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Cari lokasi custom:</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="text" id="custom-search" placeholder="Masukkan nama tempat..." class="input input-bordered flex-1">
+                        <button class="btn btn-primary" id="custom-search-btn">🔍 Cari</button>
+                    </div>
+                </div>
+
+                <div class="modal-action">
+                    <button class="btn" onclick="this.closest('.modal').remove()">Tutup</button>
+                </div>
+            </div>
+        `
+
+        document.body.appendChild(modal)
+
+        // Add event listeners
+        modal.querySelectorAll('.quick-map-btn').forEach(btn => {
+            btn.onclick = () => {
+                const searchTerm = btn.dataset.search
+                this.openQuickMaps(searchTerm)
+                modal.remove()
+            }
+        })
+
+        modal.querySelector('#custom-search-btn').onclick = () => {
+            const customSearch = modal.querySelector('#custom-search').value.trim()
+            if (customSearch) {
+                this.openQuickMaps(customSearch)
+                modal.remove()
+            } else {
+                alert('Masukkan nama tempat yang ingin dicari')
+            }
+        }
+
+        // Enter key support for custom search
+        modal.querySelector('#custom-search').onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                modal.querySelector('#custom-search-btn').click()
+            }
+        }
+    }
+
+    openQuickMaps(searchTerm) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude
+                const lng = position.coords.longitude
+                const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(searchTerm)}/@${lat},${lng},15z`
+                
+                window.open(mapsUrl, '_blank')
+                this.showInAppNotification(
+                    '🗺️ Maps Dibuka',
+                    `Mencari: ${searchTerm} di sekitar lokasi Anda`
+                )
+            },
+            (error) => {
+                console.error('Geolocation error:', error)
+                // Fallback to general search without location
+                const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(searchTerm)}`
+                window.open(mapsUrl, '_blank')
+                this.showInAppNotification(
+                    '🗺️ Maps Dibuka',
+                    `Mencari: ${searchTerm} (tanpa lokasi GPS)`
+                )
+            }
+        )
     }
 }

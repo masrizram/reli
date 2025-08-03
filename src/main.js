@@ -1,5 +1,5 @@
-import { App } from './organisms/App.js'
+import { Dashboard } from './organisms/Dashboard.js'
 
-// Initialize App
-const app = new App()
-document.getElementById('app').appendChild(app.render())
+// Initialize Dashboard
+const dashboard = new Dashboard()
+document.getElementById('app').appendChild(dashboard.render())
