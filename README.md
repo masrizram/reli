@@ -6,6 +6,8 @@
 
 [https://masrizram.github.io/reli/](https://masrizram.github.io/reli/)
 
+> **Note**: Jika halaman blank, tunggu 5-10 menit untuk GitHub Pages deployment atau cek browser console untuk error details.
+
 ## 📱 Fitur Utama
 
 - **Multi-Platform**: Support Grab, Maxim, Gojek, Indrive

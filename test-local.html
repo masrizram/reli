@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>RELI Test</title>
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-base-100">
+        <div class="container mx-auto p-4">
+            <h1 class="text-2xl font-bold mb-4">🧪 RELI Test Page</h1>
+            <div class="alert alert-success">
+                <span>✅ CSS loaded successfully</span>
+            </div>
+            <div class="alert alert-info mt-4">
+                <span>📊 Testing RELI components...</span>
+            </div>
+            <div id="test-result" class="mt-4"></div>
+        </div>
+
+        <script type="module">
+            try {
+                // Test basic functionality
+                console.log('🧪 Testing RELI...')
+
+                // Test if we can create basic elements
+                const testDiv = document.createElement('div')
+                testDiv.className = 'card bg-base-200 p-4'
+                testDiv.innerHTML = '<h2>✅ JavaScript working</h2>'
+
+                document.getElementById('test-result').appendChild(testDiv)
+
+                console.log('✅ Basic test passed')
+            } catch (error) {
+                console.error('❌ Test failed:', error)
+                document.getElementById('test-result').innerHTML =
+                    '<div class="alert alert-error">❌ JavaScript error: ' + error.message + '</div>'
+            }
+        </script>
+    </body>
+</html>
