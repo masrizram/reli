@@ -4,9 +4,9 @@
 
 ## 🚀 Demo Live
 
-[https://masrizram.github.io/reli/](https://masrizram.github.io/reli/)
+[https://reli-beryl.vercel.app/](https://reli-beryl.vercel.app/)
 
-> **Note**: Jika halaman blank, tunggu 5-10 menit untuk GitHub Pages deployment atau cek browser console untuk error details.
+> Hosted on Vercel with automatic deployment from GitHub
 
 ## 📱 Fitur Utama
 
@@ -22,7 +22,7 @@
 - **UI Framework**: DaisyUI + Tailwind CSS
 - **Build Tool**: Vite
 - **PWA**: Service Worker support
-- **Hosting**: GitHub Pages
+- **Hosting**: Vercel
 
 ## 🏃‍♂️ Quick Start
 
@@ -69,7 +69,7 @@ Project ini menggunakan Atomic Design Pattern:
 
 ## 🚀 Deployment
 
-Auto-deploy ke GitHub Pages menggunakan GitHub Actions setiap push ke branch `main`.
+Auto-deploy ke Vercel setiap push ke branch `main`. Live at: [https://reli-beryl.vercel.app/](https://reli-beryl.vercel.app/)
 
 ---
 
