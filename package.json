@@ -10,7 +10,8 @@
         "preview": "vite preview",
         "format": "prettier --write .",
         "format:check": "prettier --check .",
-        "deploy": "npm run build && gh-pages -d dist"
+        "deploy": "npm run build && gh-pages -d dist",
+        "deploy:manual": "NODE_ENV=production npm run build && gh-pages -d dist"
     },
     "dependencies": {
         "daisyui": "^4.12.10",
