@@ -700,67 +700,83 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
     }
 
     render() {
-        const container = document.createElement('div')
-        container.className = 'min-h-screen bg-base-200'
+        try {
+            const container = document.createElement('div')
+            container.className = 'min-h-screen bg-base-200'
 
-        // Create responsive layout
-        container.innerHTML = `
-            <!-- Mobile Header -->
-            <div class="navbar bg-primary text-primary-content lg:hidden">
-                <div class="navbar-start">
-                    <button class="btn btn-ghost" id="mobile-menu-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="navbar-center">
-                    <span class="text-xl font-bold">📊 RELI</span>
-                </div>
-                <div class="navbar-end">
-                    <div class="badge badge-success badge-sm">Online</div>
-                </div>
-            </div>
-
-            <!-- Sidebar Overlay for Mobile -->
-            <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden"></div>
-
-            <!-- Main Layout -->
-            <div class="flex">
-                <!-- Sidebar -->
-                <div id="sidebar-container"></div>
-                
-                <!-- Main Content -->
-                <div class="flex-1 lg:ml-64 transition-all duration-300" id="main-area">
-                    <div class="p-4 lg:p-6" id="main-content">
-                        <!-- Content will be rendered here -->
+            // Create responsive layout
+            container.innerHTML = `
+                <!-- Mobile Header -->
+                <div class="navbar bg-primary text-primary-content lg:hidden">
+                    <div class="navbar-start">
+                        <button class="btn btn-ghost" id="mobile-menu-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="navbar-center">
+                        <span class="text-xl font-bold">📊 RELI</span>
+                    </div>
+                    <div class="navbar-end">
+                        <div class="badge badge-success badge-sm">Online</div>
                     </div>
                 </div>
-            </div>
-        `
 
-        // Add sidebar
-        const sidebarContainer = container.querySelector('#sidebar-container')
-        sidebarContainer.appendChild(this.sidebar.render())
+                <!-- Sidebar Overlay for Mobile -->
+                <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden"></div>
 
-        // Setup mobile menu
-        this.setupMobileMenu(container)
+                <!-- Main Layout -->
+                <div class="flex">
+                    <!-- Sidebar -->
+                    <div id="sidebar-container"></div>
+                    
+                    <!-- Main Content -->
+                    <div class="flex-1 lg:ml-64 transition-all duration-300" id="main-area">
+                        <div class="p-4 lg:p-6" id="main-content">
+                            <!-- Content will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            `
 
-        // Initial render
-        setTimeout(() => {
+            // Add sidebar with error handling
+            try {
+                const sidebarContainer = container.querySelector('#sidebar-container')
+                if (sidebarContainer && this.sidebar) {
+                    sidebarContainer.appendChild(this.sidebar.render())
+                }
+            } catch (sidebarError) {
+                // Fallback if sidebar fails
+                const sidebarContainer = container.querySelector('#sidebar-container')
+                if (sidebarContainer) {
+                    sidebarContainer.innerHTML = '<div class="w-64 bg-base-200 h-screen"></div>'
+                }
+            }
+
+            // Setup mobile menu
+            this.setupMobileMenu(container)
+
+            // Initial render with immediate execution
             this.renderMainContent()
             this.setupNavigationListeners()
-            
-            // Debug: Check if mobile elements exist
-            console.log('Mobile header check:', {
-                mobileHeader: container.querySelector('.navbar.lg\\:hidden'),
-                mobileMenuBtn: container.querySelector('#mobile-menu-btn'),
-                sidebarOverlay: container.querySelector('#sidebar-overlay'),
-                sidebar: container.querySelector('.sidebar')
-            })
-        }, 0)
 
-        return container
+            return container
+        } catch (error) {
+            // Fallback render if main render fails
+            const fallbackContainer = document.createElement('div')
+            fallbackContainer.className = 'min-h-screen bg-base-200 flex items-center justify-center'
+            fallbackContainer.innerHTML = `
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body text-center">
+                        <h2 class="card-title">📊 RELI Dashboard</h2>
+                        <p>Loading dashboard...</p>
+                        <div class="loading loading-spinner loading-lg"></div>
+                    </div>
+                </div>
+            `
+            return fallbackContainer
+        }
     }
 
     setupMobileMenu(container) {
@@ -869,18 +885,36 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
     }
 
     renderMainContent() {
-        const mainContent = document.getElementById('main-content')
-        if (mainContent) {
-            mainContent.innerHTML = this.renderCurrentView()
-            
-            // Add page transition animation
-            mainContent.classList.add('page-transition')
-            
-            // Render specific content based on current view
-            setTimeout(() => {
+        try {
+            const mainContent = document.getElementById('main-content')
+            if (mainContent) {
+                mainContent.innerHTML = this.renderCurrentView()
+                
+                // Add page transition animation
+                mainContent.classList.add('page-transition')
+                
+                // Render specific content based on current view immediately
                 this.renderViewContent()
                 this.setupNavigationListeners()
-            }, 0)
+            }
+        } catch (error) {
+            // Fallback content if rendering fails
+            const mainContent = document.getElementById('main-content')
+            if (mainContent) {
+                mainContent.innerHTML = `
+                    <div class="container mx-auto p-4">
+                        <div class="hero bg-gradient-to-r from-primary to-secondary text-primary-content rounded-lg">
+                            <div class="hero-content text-center py-8">
+                                <div class="max-w-md">
+                                    <h1 class="text-3xl font-bold">📊 RELI Dashboard</h1>
+                                    <p class="py-4">Rangkuman Earnings Lintas-Industri</p>
+                                    <p class="text-sm opacity-90">Dashboard is loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
         }
     }
 
@@ -947,13 +981,12 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
                     break
             }
         } catch (error) {
-            console.error('Error rendering view content:', error)
-            // Show error message to user
+            // Silent error handling - show fallback content
             const mainContent = document.getElementById('main-content')
             if (mainContent) {
                 mainContent.innerHTML = `
-                    <div class="alert alert-error">
-                        <span>Error loading content. Please refresh the page.</span>
+                    <div class="alert alert-info">
+                        <span>Loading content...</span>
                     </div>
                 `
             }

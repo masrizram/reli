@@ -364,7 +364,6 @@
                 window.addEventListener('load', async () => {
                     try {
                         const registration = await navigator.serviceWorker.register('/sw.js')
-                        console.log('✅ Service Worker registered:', registration.scope)
                         
                         // Check for updates
                         registration.addEventListener('updatefound', () => {
@@ -378,7 +377,7 @@
                             }
                         })
                     } catch (error) {
-                        console.warn('Service Worker registration failed (this is normal in development):', error.message)
+                        // Service Worker registration failed - continue without it
                     }
                 })
             }
@@ -403,7 +402,7 @@
                         if (deferredPrompt) {
                             deferredPrompt.prompt()
                             const { outcome } = await deferredPrompt.userChoice
-                            console.log('Install prompt outcome:', outcome)
+
                             deferredPrompt = null
                             installPrompt.style.display = 'none'
                         }
@@ -445,18 +444,28 @@
             updateOnlineStatus()
             
             // Hide loading screen when app is ready
-            window.addEventListener('load', () => {
-                setTimeout(() => {
-                    const loadingScreen = document.getElementById('loading-screen')
-                    if (loadingScreen) {
-                        loadingScreen.style.opacity = '0'
-                        loadingScreen.style.transition = 'opacity 0.5s ease-out'
-                        setTimeout(() => {
-                            loadingScreen.style.display = 'none'
-                        }, 500)
-                    }
-                }, 1500) // Show loading for 1.5 seconds
+            function hideLoadingScreen() {
+                const loadingScreen = document.getElementById('loading-screen')
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0'
+                    loadingScreen.style.transition = 'opacity 0.3s ease-out'
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none'
+                    }, 300)
+                }
+            }
+
+            // Multiple triggers to ensure loading screen is hidden
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(hideLoadingScreen, 1000)
             })
+            
+            window.addEventListener('load', () => {
+                setTimeout(hideLoadingScreen, 500)
+            })
+            
+            // Fallback: force hide after 2 seconds
+            setTimeout(hideLoadingScreen, 2000)
             
             // Floating Action Button & Mobile Menu
             document.addEventListener('DOMContentLoaded', () => {
@@ -467,18 +476,18 @@
                         fab.addEventListener('click', (e) => {
                             e.preventDefault()
                             e.stopPropagation()
-                            console.log('FAB clicked') // Debug
+
                             
                             // Toggle sidebar on mobile
                             const sidebar = document.querySelector('.sidebar')
                             const overlay = document.querySelector('#sidebar-overlay')
                             
-                            console.log('FAB elements:', { sidebar, overlay }) // Debug
+
                             
                             if (sidebar && overlay) {
                                 sidebar.classList.toggle('sidebar-mobile-open')
                                 overlay.classList.toggle('hidden')
-                                console.log('Sidebar toggled') // Debug
+
                             } else {
                                 console.error('Sidebar or overlay not found')
                             }
@@ -492,7 +501,7 @@
                 setTimeout(() => {
                     const mobileHeaderBtn = document.getElementById('mobile-menu-btn')
                     if (mobileHeaderBtn) {
-                        console.log('Found mobile header button, attaching listener')
+
                         mobileHeaderBtn.addEventListener('click', (e) => {
                             e.preventDefault()
                             e.stopPropagation()
@@ -595,12 +604,7 @@
                 }
             })
             
-            // Suppress WebSocket errors in development
-            if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-                console.log('🔧 Development mode detected - some errors are expected')
-            }
-            
-            console.log('🚀 RELI v2.0 - Powered by AI Analytics & GPS Tracking')
+            // App initialized successfully
         </script>
     </body>
 </html>
