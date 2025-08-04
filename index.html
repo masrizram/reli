@@ -4,8 +4,14 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
         <title>RELI - Rangkuman Earnings Lintas-Industri</title>
-        <meta name="description" content="Aplikasi kalkulator pendapatan driver ojol multi-platform dengan AI analytics, GPS tracking, dan automasi cerdas" />
-        <meta name="keywords" content="ojol, driver, pendapatan, kalkulator, grab, gojek, maxim, indrive, analytics, GPS, AI" />
+        <meta
+            name="description"
+            content="Aplikasi kalkulator pendapatan driver ojol multi-platform dengan AI analytics, GPS tracking, dan automasi cerdas"
+        />
+        <meta
+            name="keywords"
+            content="ojol, driver, pendapatan, kalkulator, grab, gojek, maxim, indrive, analytics, GPS, AI"
+        />
         <meta name="author" content="RELI Team" />
 
         <!-- PWA Meta Tags -->
@@ -14,10 +20,10 @@
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="RELI" />
         <meta name="mobile-web-app-capable" content="yes" />
-        
+
         <!-- Manifest -->
         <link rel="manifest" href="/manifest.json" />
-        
+
         <!-- Icons -->
         <link
             rel="icon"
@@ -36,7 +42,7 @@
         <!-- Tailwind CSS + DaisyUI -->
         <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
         <script src="https://cdn.tailwindcss.com"></script>
-        
+
         <!-- Custom Sidebar CSS -->
         <link href="/src/styles/sidebar.css" rel="stylesheet" type="text/css" />
 
@@ -44,39 +50,81 @@
             .currency-input {
                 text-align: right;
             }
-            
+
             /* Animations */
             @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
             }
             @keyframes slideOutRight {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
             }
             @keyframes slideInUp {
-                from { transform: translateY(100%); opacity: 0; }
-                to { transform: translateY(0); opacity: 1; }
+                from {
+                    transform: translateY(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
             }
             @keyframes slideOutDown {
-                from { transform: translateY(0); opacity: 1; }
-                to { transform: translateY(100%); opacity: 0; }
+                from {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateY(100%);
+                    opacity: 0;
+                }
             }
             @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.5; }
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.5;
+                }
             }
             @keyframes bounce {
-                0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
-                40%, 43% { transform: translate3d(0, -30px, 0); }
-                70% { transform: translate3d(0, -15px, 0); }
-                90% { transform: translate3d(0, -4px, 0); }
+                0%,
+                20%,
+                53%,
+                80%,
+                100% {
+                    transform: translate3d(0, 0, 0);
+                }
+                40%,
+                43% {
+                    transform: translate3d(0, -30px, 0);
+                }
+                70% {
+                    transform: translate3d(0, -15px, 0);
+                }
+                90% {
+                    transform: translate3d(0, -4px, 0);
+                }
             }
-            
+
             .loading-spinner {
                 animation: bounce 2s infinite;
             }
-            
+
             /* PWA Install Button */
             .install-prompt {
                 position: fixed;
@@ -86,7 +134,7 @@
                 z-index: 1000;
                 display: none;
             }
-            
+
             /* Offline indicator */
             .offline-indicator {
                 position: fixed;
@@ -101,7 +149,7 @@
                 z-index: 9999;
                 display: none;
             }
-            
+
             /* Custom scrollbar */
             ::-webkit-scrollbar {
                 width: 8px;
@@ -116,13 +164,13 @@
             ::-webkit-scrollbar-thumb:hover {
                 background: #94a3b8;
             }
-            
+
             /* Loading screen */
             .loading-screen {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
             }
-            
+
             /* Floating action button */
             .fab {
                 position: fixed;
@@ -132,9 +180,9 @@
                 border-radius: 50%;
                 width: 56px;
                 height: 56px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             }
-            
+
             /* Professional Sidebar styles */
             .sidebar {
                 transition: all 0.3s ease;
@@ -145,30 +193,30 @@
                 height: 100vh;
                 z-index: 30;
             }
-            
+
             /* Sidebar overlay */
             #sidebar-overlay {
                 transition: opacity 0.3s ease;
             }
-            
+
             #sidebar-overlay.hidden {
                 opacity: 0;
                 pointer-events: none;
             }
-            
+
             #sidebar-overlay:not(.hidden) {
                 opacity: 1;
                 pointer-events: auto;
             }
-            
+
             .sidebar-collapsed {
                 width: 4rem !important;
             }
-            
+
             .sidebar-collapsed .sidebar-text {
                 display: none;
             }
-            
+
             .sidebar-item {
                 display: flex;
                 align-items: center;
@@ -181,45 +229,45 @@
                 font-weight: 500;
                 color: hsl(var(--bc) / 0.7);
             }
-            
+
             .sidebar-item:hover {
                 background-color: hsl(var(--p) / 0.1);
                 color: hsl(var(--p));
                 transform: translateX(4px);
             }
-            
+
             .sidebar-item.active {
                 background-color: hsl(var(--p));
                 color: hsl(var(--pc));
                 box-shadow: 0 4px 12px hsl(var(--p) / 0.3);
             }
-            
+
             .sidebar-item.active:hover {
                 transform: none;
                 background-color: hsl(var(--p));
             }
-            
+
             /* Mobile sidebar */
             @media (max-width: 1023px) {
                 .sidebar {
                     transform: translateX(-100%);
                     z-index: 50;
                 }
-                
+
                 .sidebar.sidebar-open {
                     transform: translateX(0);
                 }
-                
+
                 #main-area {
                     margin-left: 0 !important;
                 }
-                
+
                 /* Mobile menu button */
                 #mobile-menu-btn {
                     z-index: 60;
                     position: relative;
                 }
-                
+
                 .sidebar-overlay {
                     position: fixed;
                     top: 0;
@@ -230,54 +278,60 @@
                     z-index: 40;
                     opacity: 0;
                     visibility: hidden;
-                    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+                    transition:
+                        opacity 0.3s ease-in-out,
+                        visibility 0.3s ease-in-out;
                 }
-                
+
                 .sidebar-overlay.show {
                     opacity: 1;
                     visibility: visible;
                 }
             }
-            
+
             /* Desktop sidebar */
             @media (min-width: 1024px) {
                 .sidebar {
                     transform: translateX(0);
                 }
-                
+
                 #main-area {
                     margin-left: 16rem;
                 }
             }
-            
+
             /* Main content area adjustments */
             .main-content-shifted {
                 margin-left: 4rem;
             }
-            
+
             /* Professional card styles */
             .card-professional {
                 background: white;
                 border-radius: 0.75rem;
-                box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+                box-shadow:
+                    0 1px 3px 0 rgb(0 0 0 / 0.1),
+                    0 1px 2px -1px rgb(0 0 0 / 0.1);
                 border: 1px solid hsl(var(--b2));
                 transition: all 0.2s ease;
             }
-            
+
             .card-professional:hover {
-                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+                box-shadow:
+                    0 4px 6px -1px rgb(0 0 0 / 0.1),
+                    0 2px 4px -2px rgb(0 0 0 / 0.1);
                 transform: translateY(-1px);
             }
-            
+
             /* Professional gradient backgrounds */
             .gradient-primary {
                 background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(var(--s)) 100%);
             }
-            
+
             .gradient-card {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             }
-            
+
             /* Icon containers */
             .icon-container {
                 width: 3rem;
@@ -288,7 +342,7 @@
                 justify-content: center;
                 transition: all 0.2s ease;
             }
-            
+
             /* Stats cards */
             .stat-card {
                 background: white;
@@ -298,79 +352,91 @@
                 border: 1px solid hsl(var(--b2));
                 transition: all 0.2s ease;
             }
-            
+
             .stat-card:hover {
                 box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
                 transform: translateY(-1px);
             }
-            
+
             /* Mobile responsive adjustments */
             @media (max-width: 768px) {
                 .container {
                     padding-left: 1rem;
                     padding-right: 1rem;
                 }
-                
+
                 .stats {
                     grid-template-columns: 1fr;
                 }
-                
+
                 .card-body {
                     padding: 1rem;
                 }
-                
+
                 .hero-content {
                     padding: 2rem 1rem;
                 }
-                
+
                 .grid {
                     grid-template-columns: 1fr;
                 }
-                
+
                 .grid.md\\:grid-cols-2 {
                     grid-template-columns: 1fr;
                 }
-                
+
                 .grid.lg\\:grid-cols-3 {
                     grid-template-columns: 1fr;
                 }
-                
+
                 .grid.md\\:grid-cols-4 {
                     grid-template-columns: repeat(2, 1fr);
                 }
             }
-            
+
             /* Tablet responsive */
             @media (min-width: 768px) and (max-width: 1024px) {
                 .grid.lg\\:grid-cols-3 {
                     grid-template-columns: repeat(2, 1fr);
                 }
             }
-            
+
             /* Page transitions */
             .page-transition {
                 animation: fadeIn 0.3s ease-in-out;
             }
-            
+
             @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
-            
+
             /* Card hover effects */
             .card:hover {
                 transform: translateY(-2px);
                 transition: transform 0.2s ease;
             }
-            
+
             /* Stats animation */
             .stat-value {
                 animation: countUp 0.5s ease-out;
             }
-            
+
             @keyframes countUp {
-                from { opacity: 0; transform: scale(0.8); }
-                to { opacity: 1; transform: scale(1); }
+                from {
+                    opacity: 0;
+                    transform: scale(0.8);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
             }
         </style>
     </head>
@@ -379,7 +445,7 @@
         <div id="offline-indicator" class="offline-indicator">
             📡 Tidak ada koneksi internet. Aplikasi berjalan dalam mode offline.
         </div>
-        
+
         <!-- Loading Screen -->
         <div id="loading-screen" class="loading-screen fixed inset-0 flex items-center justify-center z-50">
             <div class="text-center">
@@ -390,7 +456,7 @@
                 <div class="loading loading-dots loading-lg"></div>
             </div>
         </div>
-        
+
         <!-- PWA Install Prompt -->
         <div id="install-prompt" class="install-prompt">
             <div class="alert alert-info shadow-lg">
@@ -407,9 +473,9 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Update Available Prompt -->
-        <div id="update-prompt" class="fixed top-4 right-4 z-50" style="display: none;">
+        <div id="update-prompt" class="fixed top-4 right-4 z-50" style="display: none">
             <div class="alert alert-success shadow-lg max-w-sm">
                 <div class="flex items-center gap-3">
                     <span class="text-xl">🔄</span>
@@ -421,18 +487,16 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Floating Action Button -->
-        <button id="fab-menu" class="fab btn btn-primary lg:hidden" title="Menu">
-            📱
-        </button>
-        
+        <button id="fab-menu" class="fab btn btn-primary lg:hidden" title="Menu">📱</button>
+
         <!-- Main App Container -->
         <div id="app" class="min-h-screen"></div>
-        
+
         <!-- Scripts -->
         <script type="module" src="/src/main.js"></script>
-        
+
         <!-- PWA and Service Worker Registration -->
         <script>
             // Service Worker Registration
@@ -440,7 +504,7 @@
                 window.addEventListener('load', async () => {
                     try {
                         const registration = await navigator.serviceWorker.register('/sw.js')
-                        
+
                         // Check for updates
                         registration.addEventListener('updatefound', () => {
                             const newWorker = registration.installing
@@ -457,7 +521,7 @@
                     }
                 })
             }
-            
+
             // PWA Install Prompt
             let deferredPrompt
             window.addEventListener('beforeinstallprompt', (e) => {
@@ -465,15 +529,15 @@
                 deferredPrompt = e
                 showInstallPrompt()
             })
-            
+
             function showInstallPrompt() {
                 const installPrompt = document.getElementById('install-prompt')
                 const installButton = document.getElementById('install-button')
                 const dismissButton = document.getElementById('dismiss-install')
-                
+
                 if (installPrompt && !localStorage.getItem('reli-install-dismissed')) {
                     installPrompt.style.display = 'block'
-                    
+
                     installButton.addEventListener('click', async () => {
                         if (deferredPrompt) {
                             deferredPrompt.prompt()
@@ -483,21 +547,21 @@
                             installPrompt.style.display = 'none'
                         }
                     })
-                    
+
                     dismissButton.addEventListener('click', () => {
                         installPrompt.style.display = 'none'
                         localStorage.setItem('reli-install-dismissed', 'true')
                     })
                 }
             }
-            
+
             function showUpdatePrompt() {
                 const updatePrompt = document.getElementById('update-prompt')
                 const updateButton = document.getElementById('update-button')
-                
+
                 if (updatePrompt) {
                     updatePrompt.style.display = 'block'
-                    
+
                     updateButton.addEventListener('click', () => {
                         if (navigator.serviceWorker.controller) {
                             navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' })
@@ -506,7 +570,7 @@
                     })
                 }
             }
-            
+
             // Online/Offline Status
             function updateOnlineStatus() {
                 const offlineIndicator = document.getElementById('offline-indicator')
@@ -514,11 +578,11 @@
                     offlineIndicator.style.display = navigator.onLine ? 'none' : 'block'
                 }
             }
-            
+
             window.addEventListener('online', updateOnlineStatus)
             window.addEventListener('offline', updateOnlineStatus)
             updateOnlineStatus()
-            
+
             // Hide loading screen when app is ready
             function hideLoadingScreen() {
                 const loadingScreen = document.getElementById('loading-screen')
@@ -535,14 +599,14 @@
             document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(hideLoadingScreen, 1000)
             })
-            
+
             window.addEventListener('load', () => {
                 setTimeout(hideLoadingScreen, 500)
             })
-            
+
             // Fallback: force hide after 2 seconds
             setTimeout(hideLoadingScreen, 2000)
-            
+
             // Floating Action Button & Mobile Menu
             document.addEventListener('DOMContentLoaded', () => {
                 // Wait for dashboard to be rendered
@@ -552,14 +616,14 @@
                         fab.addEventListener('click', (e) => {
                             e.preventDefault()
                             e.stopPropagation()
-                            
+
                             // Toggle sidebar on mobile
                             const sidebar = document.querySelector('.sidebar')
                             const overlay = document.querySelector('#sidebar-overlay')
-                            
+
                             if (sidebar && overlay) {
                                 const isOpen = sidebar.classList.contains('sidebar-open')
-                                
+
                                 if (isOpen) {
                                     sidebar.classList.remove('sidebar-open')
                                     overlay.classList.remove('show')
@@ -576,7 +640,7 @@
             })
 
             })
-            
+
             // Performance monitoring
             window.addEventListener('load', () => {
                 if ('performance' in window) {
@@ -584,13 +648,13 @@
                     console.log('📊 App load time:', Math.round(perfData.loadEventEnd - perfData.fetchStart), 'ms')
                 }
             })
-            
+
             // Error handling
             window.addEventListener('error', (event) => {
                 // Filter out common development errors
                 if (event.error && event.error.message) {
                     const message = event.error.message.toLowerCase()
-                    if (message.includes('websocket') || 
+                    if (message.includes('websocket') ||
                         message.includes('failed to fetch') ||
                         message.includes('network error')) {
                         console.warn('Development network error (can be ignored):', event.error.message)
@@ -599,12 +663,12 @@
                 }
                 console.error('❌ Global error:', event.error)
             })
-            
+
             window.addEventListener('unhandledrejection', (event) => {
                 // Filter out common development promise rejections
                 if (event.reason && typeof event.reason === 'string') {
                     const reason = event.reason.toLowerCase()
-                    if (reason.includes('websocket') || 
+                    if (reason.includes('websocket') ||
                         reason.includes('failed to fetch') ||
                         reason.includes('network error')) {
                         console.warn('Development promise rejection (can be ignored):', event.reason)
@@ -615,7 +679,7 @@
                 console.error('❌ Unhandled promise rejection:', event.reason)
                 event.preventDefault()
             })
-            
+
             // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
                 // Ctrl/Cmd + S = Save/Calculate
@@ -623,7 +687,7 @@
                     e.preventDefault()
                     document.dispatchEvent(new CustomEvent('reli-auto-calculate'))
                 }
-                
+
                 // Ctrl/Cmd + E = Export
                 if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
                     e.preventDefault()
@@ -633,7 +697,7 @@
                     }
                 }
             })
-            
+
             // App initialized successfully
         </script>
     </body>

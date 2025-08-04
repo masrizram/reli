@@ -99,7 +99,7 @@ export class Dashboard {
         })
 
         // Navigation listeners
-        document.addEventListener('navigate-to', (e) => {
+        document.addEventListener('navigate-to', e => {
             this.navigateTo(e.detail.view)
         })
 
@@ -149,7 +149,8 @@ export class Dashboard {
         this.results.totalKotor = Object.values(this.platforms).reduce((sum, platform) => sum + platform.kotor, 0)
         this.results.biayaBBM = Math.round(this.fuel.biayaBBM)
         this.results.totalAdditionalCosts = this.additionalCosts.total
-        this.results.pendapatanBersih = this.results.totalKotor - this.results.biayaBBM - this.results.totalAdditionalCosts
+        this.results.pendapatanBersih =
+            this.results.totalKotor - this.results.biayaBBM - this.results.totalAdditionalCosts
 
         this.updateDashboardStats()
         this.updateSidebarStats()
@@ -160,7 +161,7 @@ export class Dashboard {
         if (this.sidebar) {
             this.sidebar.updateStats({
                 results: this.results,
-                fuel: this.fuel
+                fuel: this.fuel,
             })
         }
     }
@@ -374,7 +375,7 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
             optimizer: 'Optimizer',
             location: 'Location Features',
             notifications: 'Notifications',
-            automation: 'Automation Hub'
+            automation: 'Automation Hub',
         }
         return titles[view] || 'Halaman'
     }
@@ -788,7 +789,7 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
         try {
             // Load CSS if not already loaded
             this.loadSidebarCSS()
-            
+
             const container = document.createElement('div')
             container.className = 'min-h-screen bg-base-100'
 
@@ -921,12 +922,12 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
 
             if (mobileMenuBtn && sidebarOverlay && sidebar) {
                 // Mobile menu toggle
-                mobileMenuBtn.addEventListener('click', (e) => {
+                mobileMenuBtn.addEventListener('click', e => {
                     e.preventDefault()
                     e.stopPropagation()
-                    
+
                     const isOpen = sidebar.classList.contains('sidebar-open')
-                    
+
                     if (isOpen) {
                         // Close sidebar
                         sidebar.classList.remove('sidebar-open')
@@ -948,7 +949,7 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
                 })
 
                 // Close sidebar on escape key
-                document.addEventListener('keydown', (e) => {
+                document.addEventListener('keydown', e => {
                     if (e.key === 'Escape' && sidebar.classList.contains('sidebar-open')) {
                         sidebar.classList.remove('sidebar-open')
                         sidebarOverlay.classList.remove('show')
@@ -963,7 +964,7 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
                         sidebar.classList.remove('sidebar-open')
                         sidebarOverlay.classList.remove('show')
                         document.body.style.overflow = ''
-                        
+
                         // Update main area margin based on sidebar state
                         if (mainArea) {
                             if (sidebar.classList.contains('sidebar-collapsed')) {
@@ -990,7 +991,7 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
             const quickExport = container.querySelector('.quick-export')
 
             if (quickCalculate) {
-                quickCalculate.addEventListener('click', (e) => {
+                quickCalculate.addEventListener('click', e => {
                     e.preventDefault()
                     this.calculate()
                     this.showToast('💰 Data dihitung ulang', 'success')
@@ -998,14 +999,14 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
             }
 
             if (quickWhatsapp) {
-                quickWhatsapp.addEventListener('click', (e) => {
+                quickWhatsapp.addEventListener('click', e => {
                     e.preventDefault()
                     this.saveNotes()
                 })
             }
 
             if (quickExport) {
-                quickExport.addEventListener('click', (e) => {
+                quickExport.addEventListener('click', e => {
                     e.preventDefault()
                     this.exportData()
                     this.showToast('📊 Data berhasil diexport', 'success')
@@ -1024,9 +1025,9 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
             <span class="text-sm">${message}</span>
             <button class="btn btn-sm btn-circle btn-ghost" onclick="this.parentElement.remove()">✕</button>
         `
-        
+
         document.body.appendChild(toast)
-        
+
         setTimeout(() => {
             if (toast.parentElement) {
                 toast.style.animation = 'slideOutDown 0.3s ease-in'
@@ -1045,24 +1046,24 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
             try {
                 // Add event listeners for all navigation items
                 const navItems = document.querySelectorAll('.nav-item')
-                
+
                 navItems.forEach((item, index) => {
                     // Remove existing listeners to prevent duplicates
                     const newItem = item.cloneNode(true)
                     if (item.parentNode) {
                         item.parentNode.replaceChild(newItem, item)
                     }
-                    
+
                     // Add new listener with proper binding
-                    newItem.addEventListener('click', (e) => {
+                    newItem.addEventListener('click', e => {
                         e.preventDefault()
                         e.stopPropagation()
-                        
+
                         const view = e.target.dataset.view || e.target.closest('.nav-item')?.dataset.view
-                        
+
                         if (view) {
                             this.navigateTo(view)
-                            
+
                             // Close mobile menu if open
                             const sidebar = document.querySelector('.sidebar')
                             const overlay = document.querySelector('#sidebar-overlay')
@@ -1077,21 +1078,21 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
 
                 // Add event listeners for quick action buttons
                 document.querySelectorAll('.quick-calculate').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
+                    btn.addEventListener('click', e => {
                         e.preventDefault()
                         document.dispatchEvent(new CustomEvent('reli-auto-calculate'))
                     })
                 })
 
                 document.querySelectorAll('.quick-whatsapp').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
+                    btn.addEventListener('click', e => {
                         e.preventDefault()
                         this.saveNotes()
                     })
                 })
 
                 document.querySelectorAll('.quick-export').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
+                    btn.addEventListener('click', e => {
                         e.preventDefault()
                         this.exportData()
                     })
@@ -1107,10 +1108,10 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
             const mainContent = document.getElementById('main-content')
             if (mainContent) {
                 mainContent.innerHTML = this.renderCurrentView()
-                
+
                 // Add page transition animation
                 mainContent.classList.add('page-transition')
-                
+
                 // Render specific content based on current view immediately
                 this.renderViewContent()
                 this.setupNavigationListeners()

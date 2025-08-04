@@ -5,10 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         const dashboard = new Dashboard()
         const appElement = document.getElementById('app')
-        
+
         if (appElement) {
             appElement.appendChild(dashboard.render())
-            
+
             // Trigger loading screen hide
             setTimeout(() => {
                 const loadingScreen = document.getElementById('loading-screen')
@@ -25,15 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } catch (error) {
         console.error('Error initializing dashboard:', error)
-        
+
         // Show error message instead of loading screen
         const appElement = document.getElementById('app')
         const loadingScreen = document.getElementById('loading-screen')
-        
+
         if (loadingScreen) {
             loadingScreen.style.display = 'none'
         }
-        
+
         if (appElement) {
             appElement.innerHTML = `
                 <div class="min-h-screen bg-base-200 flex items-center justify-center p-4">

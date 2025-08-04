@@ -9,7 +9,7 @@ export class LocationFeatures {
         this.isTracking = false
         this.totalDistance = 0
         this.lastPosition = null
-        
+
         this.startTrackingButton = new Button('📍 Mulai GPS Tracking', this.startTracking.bind(this))
         this.stopTrackingButton = new Button('⏹️ Stop Tracking', this.stopTracking.bind(this))
         this.findFuelButton = new Button('⛽ Cari SPBU Terdekat', this.findNearestFuelStation.bind(this))
@@ -26,11 +26,11 @@ export class LocationFeatures {
         this.isTracking = true
         this.totalDistance = 0
         this.lastPosition = null
-        
+
         const options = {
             enableHighAccuracy: true,
             timeout: 10000,
-            maximumAge: 60000
+            maximumAge: 60000,
         }
 
         this.watchId = navigator.geolocation.watchPosition(
@@ -48,18 +48,18 @@ export class LocationFeatures {
             navigator.geolocation.clearWatch(this.watchId)
             this.watchId = null
         }
-        
+
         this.isTracking = false
         this.updateTrackingStatus()
-        
+
         // Update jarak otomatis ke fuel input
         if (this.onLocationUpdate) {
             this.onLocationUpdate({
                 type: 'distance',
-                distance: Math.round(this.totalDistance)
+                distance: Math.round(this.totalDistance),
             })
         }
-        
+
         this.showAlert(`Tracking selesai. Total jarak: ${Math.round(this.totalDistance)} km`, 'info')
     }
 
@@ -67,7 +67,7 @@ export class LocationFeatures {
         this.currentLocation = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
-            accuracy: position.coords.accuracy
+            accuracy: position.coords.accuracy,
         }
 
         // Calculate distance if we have a previous position
@@ -78,7 +78,7 @@ export class LocationFeatures {
                 this.currentLocation.lat,
                 this.currentLocation.lng
             )
-            
+
             // Only add distance if movement is significant (> 10 meters) to avoid GPS noise
             if (distance > 0.01) {
                 this.totalDistance += distance
@@ -110,9 +110,9 @@ export class LocationFeatures {
         const R = 6371 // Earth's radius in km
         const dLat = this.toRad(lat2 - lat1)
         const dLng = this.toRad(lng2 - lng1)
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                  Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
-                  Math.sin(dLng / 2) * Math.sin(dLng / 2)
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2)
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
         return R * c
     }
@@ -128,7 +128,7 @@ export class LocationFeatures {
         }
 
         this.showAlert('Mencari SPBU terdekat...', 'info')
-        
+
         try {
             // Use Google Places API to find real fuel stations
             const fuelStations = await this.searchNearbyPlaces('gas_station')
@@ -146,10 +146,10 @@ export class LocationFeatures {
         // Using Google Places API (requires API key)
         // For demo purposes, we'll use a combination of real location + mock data
         const { lat, lng } = this.currentLocation
-        
+
         // This would be the real API call:
         // const response = await fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=${type}&key=${API_KEY}`)
-        
+
         // For now, generate location-aware mock data
         return this.generateLocationAwareMockData(type, lat, lng)
     }
@@ -157,7 +157,7 @@ export class LocationFeatures {
     generateLocationAwareMockData(type, lat, lng) {
         // Get city name based on coordinates (simplified)
         const cityName = this.getCityFromCoordinates(lat, lng)
-        
+
         if (type === 'gas_station') {
             return [
                 {
@@ -166,7 +166,7 @@ export class LocationFeatures {
                     price: 'Rp 10.200/L',
                     rating: (4.0 + Math.random()).toFixed(1),
                     address: `Jl. Raya ${cityName} No. ${Math.floor(Math.random() * 200) + 1}`,
-                    coordinates: this.generateNearbyCoordinate(lat, lng, 2)
+                    coordinates: this.generateNearbyCoordinate(lat, lng, 2),
                 },
                 {
                     name: `Pertamina ${cityName} Utara`,
@@ -174,7 +174,7 @@ export class LocationFeatures {
                     price: 'Rp 10.000/L',
                     rating: (3.8 + Math.random()).toFixed(1),
                     address: `Jl. ${cityName} Raya No. ${Math.floor(Math.random() * 150) + 50}`,
-                    coordinates: this.generateNearbyCoordinate(lat, lng, 3)
+                    coordinates: this.generateNearbyCoordinate(lat, lng, 3),
                 },
                 {
                     name: `BP ${cityName} Selatan`,
@@ -182,11 +182,11 @@ export class LocationFeatures {
                     price: 'Rp 10.150/L',
                     rating: (4.1 + Math.random()).toFixed(1),
                     address: `Jl. ${cityName} Indah No. ${Math.floor(Math.random() * 100) + 25}`,
-                    coordinates: this.generateNearbyCoordinate(lat, lng, 4)
-                }
+                    coordinates: this.generateNearbyCoordinate(lat, lng, 4),
+                },
             ].sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))
         }
-        
+
         return []
     }
 
@@ -222,10 +222,10 @@ export class LocationFeatures {
         const t = 2 * Math.PI * v
         const x = w * Math.cos(t)
         const y = w * Math.sin(t)
-        
+
         return {
             lat: baseLat + x,
-            lng: baseLng + y
+            lng: baseLng + y,
         }
     }
 
@@ -237,15 +237,15 @@ export class LocationFeatures {
                 distance: '1.2 km',
                 price: 'Rp 10.000/L',
                 rating: 4.2,
-                address: 'Lokasi tidak dapat dideteksi'
+                address: 'Lokasi tidak dapat dideteksi',
             },
             {
                 name: 'SPBU Terdekat 2',
                 distance: '2.1 km',
                 price: 'Rp 10.200/L',
                 rating: 4.0,
-                address: 'Lokasi tidak dapat dideteksi'
-            }
+                address: 'Lokasi tidak dapat dideteksi',
+            },
         ]
     }
 
@@ -256,7 +256,7 @@ export class LocationFeatures {
         }
 
         this.showAlert('Mencari tempat parkir terdekat...', 'info')
-        
+
         try {
             const parkingSpots = await this.searchNearbyParking()
             this.showParkingSpotsModal(parkingSpots)
@@ -271,28 +271,32 @@ export class LocationFeatures {
     async searchNearbyParking() {
         const { lat, lng } = this.currentLocation
         const cityName = this.getCityFromCoordinates(lat, lng)
-        
+
         // Generate location-aware parking data
         const parkingTypes = [
             { type: 'Mall', priceRange: [3000, 5000], availability: ['Tersedia', 'Penuh', 'Terbatas'] },
             { type: 'Roadside', priceRange: [2000, 3000], availability: ['Tersedia', 'Tersedia', 'Terbatas'] },
             { type: 'Office Building', priceRange: [4000, 7000], availability: ['Tersedia', 'Penuh', 'Tersedia'] },
-            { type: 'Public Parking', priceRange: [2500, 4000], availability: ['Tersedia', 'Tersedia', 'Terbatas'] }
+            { type: 'Public Parking', priceRange: [2500, 4000], availability: ['Tersedia', 'Tersedia', 'Terbatas'] },
         ]
-        
-        return parkingTypes.map((parking, index) => {
-            const price = Math.floor(Math.random() * (parking.priceRange[1] - parking.priceRange[0]) + parking.priceRange[0])
-            const availability = parking.availability[Math.floor(Math.random() * parking.availability.length)]
-            
-            return {
-                name: `${parking.type} ${cityName} ${index + 1}`,
-                distance: this.getRandomDistance(0.1, 2.0),
-                price: `Rp ${price.toLocaleString('id-ID')}/jam`,
-                availability: availability,
-                type: parking.type,
-                coordinates: this.generateNearbyCoordinate(lat, lng, 2)
-            }
-        }).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))
+
+        return parkingTypes
+            .map((parking, index) => {
+                const price = Math.floor(
+                    Math.random() * (parking.priceRange[1] - parking.priceRange[0]) + parking.priceRange[0]
+                )
+                const availability = parking.availability[Math.floor(Math.random() * parking.availability.length)]
+
+                return {
+                    name: `${parking.type} ${cityName} ${index + 1}`,
+                    distance: this.getRandomDistance(0.1, 2.0),
+                    price: `Rp ${price.toLocaleString('id-ID')}/jam`,
+                    availability: availability,
+                    type: parking.type,
+                    coordinates: this.generateNearbyCoordinate(lat, lng, 2),
+                }
+            })
+            .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))
     }
 
     getMockParkingSpots() {
@@ -302,15 +306,15 @@ export class LocationFeatures {
                 distance: '0.3 km',
                 price: 'Rp 3.000/jam',
                 availability: 'Tersedia',
-                type: 'Public'
+                type: 'Public',
             },
             {
                 name: 'Parkir Terdekat 2',
                 distance: '0.8 km',
                 price: 'Rp 2.500/jam',
                 availability: 'Tersedia',
-                type: 'Roadside'
-            }
+                type: 'Roadside',
+            },
         ]
     }
 
@@ -321,7 +325,7 @@ export class LocationFeatures {
         }
 
         this.showAlert('Menganalisis kondisi lalu lintas dan hotspot...', 'info')
-        
+
         // Get location-aware route optimization
         const recommendations = this.getLocationAwareRouteRecommendations()
         this.showRouteOptimizationModal(recommendations)
@@ -332,7 +336,7 @@ export class LocationFeatures {
         const cityName = this.getCityFromCoordinates(lat, lng)
         const currentHour = new Date().getHours()
         const currentDay = new Date().getDay() // 0 = Sunday, 1 = Monday, etc.
-        
+
         let trafficLevel = 'Sedang'
         let recommendation = 'Rute normal'
         let hotspots = []
@@ -363,49 +367,135 @@ export class LocationFeatures {
             recommendation,
             hotspots,
             currentLocation: cityName,
-            currentTime: `${currentHour}:${new Date().getMinutes().toString().padStart(2, '0')}`
+            currentTime: `${currentHour}:${new Date().getMinutes().toString().padStart(2, '0')}`,
         }
     }
 
     getLocationSpecificHotspots(cityName, hour, day) {
         const hotspotDatabase = {
-            'Depok': [
-                { area: 'Stasiun Depok', demand: hour >= 6 && hour <= 9 || hour >= 17 && hour <= 19 ? 'Tinggi' : 'Sedang', reason: 'Stasiun commuter line' },
-                { area: 'Margonda Raya', demand: hour >= 11 && hour <= 21 ? 'Tinggi' : 'Sedang', reason: 'Pusat kuliner dan belanja' },
-                { area: 'UI Depok', demand: day >= 1 && day <= 5 && hour >= 7 && hour <= 17 ? 'Tinggi' : 'Rendah', reason: 'Kampus Universitas Indonesia' },
-                { area: 'Margo City', demand: hour >= 10 && hour <= 22 ? 'Sedang' : 'Rendah', reason: 'Mall dan pusat perbelanjaan' }
+            Depok: [
+                {
+                    area: 'Stasiun Depok',
+                    demand: (hour >= 6 && hour <= 9) || (hour >= 17 && hour <= 19) ? 'Tinggi' : 'Sedang',
+                    reason: 'Stasiun commuter line',
+                },
+                {
+                    area: 'Margonda Raya',
+                    demand: hour >= 11 && hour <= 21 ? 'Tinggi' : 'Sedang',
+                    reason: 'Pusat kuliner dan belanja',
+                },
+                {
+                    area: 'UI Depok',
+                    demand: day >= 1 && day <= 5 && hour >= 7 && hour <= 17 ? 'Tinggi' : 'Rendah',
+                    reason: 'Kampus Universitas Indonesia',
+                },
+                {
+                    area: 'Margo City',
+                    demand: hour >= 10 && hour <= 22 ? 'Sedang' : 'Rendah',
+                    reason: 'Mall dan pusat perbelanjaan',
+                },
             ],
             'Jakarta Selatan': [
-                { area: 'Blok M', demand: hour >= 10 && hour <= 22 ? 'Tinggi' : 'Sedang', reason: 'Pusat perbelanjaan dan kuliner' },
-                { area: 'Kemang', demand: hour >= 18 && hour <= 24 ? 'Tinggi' : 'Sedang', reason: 'Area hiburan malam' },
-                { area: 'Senayan', demand: hour >= 7 && hour <= 19 ? 'Tinggi' : 'Sedang', reason: 'Area perkantoran dan mall' },
-                { area: 'Pondok Indah', demand: hour >= 10 && hour <= 21 ? 'Sedang' : 'Rendah', reason: 'Area perumahan elite' }
+                {
+                    area: 'Blok M',
+                    demand: hour >= 10 && hour <= 22 ? 'Tinggi' : 'Sedang',
+                    reason: 'Pusat perbelanjaan dan kuliner',
+                },
+                {
+                    area: 'Kemang',
+                    demand: hour >= 18 && hour <= 24 ? 'Tinggi' : 'Sedang',
+                    reason: 'Area hiburan malam',
+                },
+                {
+                    area: 'Senayan',
+                    demand: hour >= 7 && hour <= 19 ? 'Tinggi' : 'Sedang',
+                    reason: 'Area perkantoran dan mall',
+                },
+                {
+                    area: 'Pondok Indah',
+                    demand: hour >= 10 && hour <= 21 ? 'Sedang' : 'Rendah',
+                    reason: 'Area perumahan elite',
+                },
             ],
             'Jakarta Pusat': [
-                { area: 'Sudirman - Thamrin', demand: hour >= 7 && hour <= 19 ? 'Tinggi' : 'Sedang', reason: 'CBD Jakarta' },
+                {
+                    area: 'Sudirman - Thamrin',
+                    demand: hour >= 7 && hour <= 19 ? 'Tinggi' : 'Sedang',
+                    reason: 'CBD Jakarta',
+                },
                 { area: 'Monas', demand: day === 0 || day === 6 ? 'Tinggi' : 'Sedang', reason: 'Wisata dan rekreasi' },
-                { area: 'Tanah Abang', demand: hour >= 8 && hour <= 18 ? 'Tinggi' : 'Sedang', reason: 'Pusat perdagangan tekstil' },
-                { area: 'Gambir', demand: hour >= 6 && hour <= 20 ? 'Tinggi' : 'Sedang', reason: 'Stasiun kereta api utama' }
+                {
+                    area: 'Tanah Abang',
+                    demand: hour >= 8 && hour <= 18 ? 'Tinggi' : 'Sedang',
+                    reason: 'Pusat perdagangan tekstil',
+                },
+                {
+                    area: 'Gambir',
+                    demand: hour >= 6 && hour <= 20 ? 'Tinggi' : 'Sedang',
+                    reason: 'Stasiun kereta api utama',
+                },
             ],
-            'Bandung': [
-                { area: 'Dago', demand: hour >= 15 && hour <= 22 ? 'Tinggi' : 'Sedang', reason: 'Area wisata dan kuliner' },
-                { area: 'Braga', demand: hour >= 10 && hour <= 21 ? 'Sedang' : 'Rendah', reason: 'Kawasan heritage dan kuliner' },
-                { area: 'Cihampelas', demand: hour >= 10 && hour <= 20 ? 'Tinggi' : 'Sedang', reason: 'Pusat fashion dan belanja' },
-                { area: 'Stasiun Bandung', demand: hour >= 6 && hour <= 20 ? 'Tinggi' : 'Sedang', reason: 'Terminal transportasi utama' }
+            Bandung: [
+                {
+                    area: 'Dago',
+                    demand: hour >= 15 && hour <= 22 ? 'Tinggi' : 'Sedang',
+                    reason: 'Area wisata dan kuliner',
+                },
+                {
+                    area: 'Braga',
+                    demand: hour >= 10 && hour <= 21 ? 'Sedang' : 'Rendah',
+                    reason: 'Kawasan heritage dan kuliner',
+                },
+                {
+                    area: 'Cihampelas',
+                    demand: hour >= 10 && hour <= 20 ? 'Tinggi' : 'Sedang',
+                    reason: 'Pusat fashion dan belanja',
+                },
+                {
+                    area: 'Stasiun Bandung',
+                    demand: hour >= 6 && hour <= 20 ? 'Tinggi' : 'Sedang',
+                    reason: 'Terminal transportasi utama',
+                },
             ],
-            'Yogyakarta': [
-                { area: 'Malioboro', demand: hour >= 10 && hour <= 23 ? 'Tinggi' : 'Sedang', reason: 'Jalan wisata utama' },
-                { area: 'UGM', demand: day >= 1 && day <= 5 && hour >= 7 && hour <= 17 ? 'Tinggi' : 'Rendah', reason: 'Kampus utama' },
-                { area: 'Tugu Station', demand: hour >= 6 && hour <= 20 ? 'Tinggi' : 'Sedang', reason: 'Stasiun kereta api' },
-                { area: 'Prawirotaman', demand: hour >= 18 && hour <= 23 ? 'Sedang' : 'Rendah', reason: 'Area backpacker dan kuliner' }
-            ]
+            Yogyakarta: [
+                {
+                    area: 'Malioboro',
+                    demand: hour >= 10 && hour <= 23 ? 'Tinggi' : 'Sedang',
+                    reason: 'Jalan wisata utama',
+                },
+                {
+                    area: 'UGM',
+                    demand: day >= 1 && day <= 5 && hour >= 7 && hour <= 17 ? 'Tinggi' : 'Rendah',
+                    reason: 'Kampus utama',
+                },
+                {
+                    area: 'Tugu Station',
+                    demand: hour >= 6 && hour <= 20 ? 'Tinggi' : 'Sedang',
+                    reason: 'Stasiun kereta api',
+                },
+                {
+                    area: 'Prawirotaman',
+                    demand: hour >= 18 && hour <= 23 ? 'Sedang' : 'Rendah',
+                    reason: 'Area backpacker dan kuliner',
+                },
+            ],
         }
 
-        return hotspotDatabase[cityName] || [
-            { area: `${cityName} Center`, demand: 'Sedang', reason: 'Pusat kota' },
-            { area: `${cityName} Mall Area`, demand: hour >= 10 && hour <= 21 ? 'Tinggi' : 'Rendah', reason: 'Area perbelanjaan' },
-            { area: `${cityName} Station`, demand: hour >= 6 && hour <= 20 ? 'Tinggi' : 'Sedang', reason: 'Area transportasi' }
-        ]
+        return (
+            hotspotDatabase[cityName] || [
+                { area: `${cityName} Center`, demand: 'Sedang', reason: 'Pusat kota' },
+                {
+                    area: `${cityName} Mall Area`,
+                    demand: hour >= 10 && hour <= 21 ? 'Tinggi' : 'Rendah',
+                    reason: 'Area perbelanjaan',
+                },
+                {
+                    area: `${cityName} Station`,
+                    demand: hour >= 6 && hour <= 20 ? 'Tinggi' : 'Sedang',
+                    reason: 'Area transportasi',
+                },
+            ]
+        )
     }
 
     showFuelStationsModal(stations) {
@@ -415,7 +505,9 @@ export class LocationFeatures {
             <div class="modal-box max-w-2xl">
                 <h3 class="font-bold text-lg mb-4">⛽ SPBU Terdekat</h3>
                 <div class="space-y-3">
-                    ${stations.map(station => `
+                    ${stations
+                        .map(
+                            station => `
                         <div class="card bg-base-200 p-4">
                             <div class="flex justify-between items-start">
                                 <div>
@@ -437,16 +529,18 @@ export class LocationFeatures {
                                 </div>
                             </div>
                         </div>
-                    `).join('')}
+                    `
+                        )
+                        .join('')}
                 </div>
                 <div class="modal-action">
                     <button class="btn close-btn">Tutup</button>
                 </div>
             </div>
         `
-        
+
         document.body.appendChild(modal)
-        
+
         // Add event listeners
         modal.querySelector('.close-btn').onclick = () => this.closeModal(modal)
         modal.querySelectorAll('.maps-btn').forEach(btn => {
@@ -461,7 +555,9 @@ export class LocationFeatures {
             <div class="modal-box max-w-2xl">
                 <h3 class="font-bold text-lg mb-4">🅿️ Tempat Parkir Terdekat</h3>
                 <div class="space-y-3">
-                    ${spots.map(spot => `
+                    ${spots
+                        .map(
+                            spot => `
                         <div class="card bg-base-200 p-4">
                             <div class="flex justify-between items-start">
                                 <div>
@@ -485,16 +581,18 @@ export class LocationFeatures {
                                 </div>
                             </div>
                         </div>
-                    `).join('')}
+                    `
+                        )
+                        .join('')}
                 </div>
                 <div class="modal-action">
                     <button class="btn close-btn">Tutup</button>
                 </div>
             </div>
         `
-        
+
         document.body.appendChild(modal)
-        
+
         // Add event listeners
         modal.querySelector('.close-btn').onclick = () => this.closeModal(modal)
         modal.querySelectorAll('.maps-btn').forEach(btn => {
@@ -519,7 +617,9 @@ export class LocationFeatures {
 
                 <h4 class="font-semibold mb-3">🔥 Area Hotspot di ${data.currentLocation}:</h4>
                 <div class="space-y-2 mb-4">
-                    ${data.hotspots.map(hotspot => `
+                    ${data.hotspots
+                        .map(
+                            hotspot => `
                         <div class="card bg-base-200 p-3">
                             <div class="flex justify-between items-center">
                                 <div>
@@ -527,14 +627,19 @@ export class LocationFeatures {
                                     <span class="text-sm opacity-70 ml-2">${hotspot.reason}</span>
                                 </div>
                                 <span class="badge ${
-                                    hotspot.demand === 'Tinggi' ? 'badge-error' : 
-                                    hotspot.demand === 'Sedang' ? 'badge-warning' : 'badge-success'
+                                    hotspot.demand === 'Tinggi'
+                                        ? 'badge-error'
+                                        : hotspot.demand === 'Sedang'
+                                          ? 'badge-warning'
+                                          : 'badge-success'
                                 }">
                                     ${hotspot.demand}
                                 </span>
                             </div>
                         </div>
-                    `).join('')}
+                    `
+                        )
+                        .join('')}
                 </div>
 
                 <div class="alert alert-warning">
@@ -553,9 +658,9 @@ export class LocationFeatures {
                 </div>
             </div>
         `
-        
+
         document.body.appendChild(modal)
-        
+
         // Add event listeners
         modal.querySelector('.close-btn').onclick = () => this.closeModal(modal)
         modal.querySelector('.maps-btn').onclick = () => this.openMaps(`${data.currentLocation} hotspot area`)
@@ -563,7 +668,7 @@ export class LocationFeatures {
 
     openMaps(location, coordinates = null) {
         let mapsUrl
-        
+
         if (coordinates && coordinates.lat && coordinates.lng) {
             // Use exact coordinates for more accurate navigation
             mapsUrl = `https://www.google.com/maps/dir/${this.currentLocation.lat},${this.currentLocation.lng}/${coordinates.lat},${coordinates.lng}`
@@ -576,7 +681,7 @@ export class LocationFeatures {
             const query = encodeURIComponent(location)
             mapsUrl = `https://www.google.com/maps/search/${query}`
         }
-        
+
         window.open(mapsUrl, '_blank')
         this.showAlert(`Membuka Google Maps untuk: ${location}`, 'info')
     }
@@ -596,7 +701,7 @@ export class LocationFeatures {
             const query = encodeURIComponent(destination)
             mapsUrl = `https://www.google.com/maps/dir/${this.currentLocation.lat},${this.currentLocation.lng}/${query}`
         }
-        
+
         window.open(mapsUrl, '_blank')
         this.showAlert(`Navigasi dimulai ke: ${destination}`, 'success')
     }
@@ -608,17 +713,17 @@ export class LocationFeatures {
         }
 
         const searchQueries = {
-            'gas_station': 'SPBU',
-            'parking': 'parkir',
-            'restaurant': 'restoran',
-            'hospital': 'rumah sakit',
-            'atm': 'ATM',
-            'mall': 'mall'
+            gas_station: 'SPBU',
+            parking: 'parkir',
+            restaurant: 'restoran',
+            hospital: 'rumah sakit',
+            atm: 'ATM',
+            mall: 'mall',
         }
 
         const query = searchQueries[type] || type
         const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(query)}/@${this.currentLocation.lat},${this.currentLocation.lng},15z`
-        
+
         window.open(mapsUrl, '_blank')
         this.showAlert(`Mencari ${query} terdekat di Google Maps`, 'info')
     }
@@ -630,7 +735,7 @@ export class LocationFeatures {
     updateTrackingStatus() {
         const statusElement = document.getElementById('tracking-status')
         if (statusElement) {
-            statusElement.innerHTML = this.isTracking 
+            statusElement.innerHTML = this.isTracking
                 ? '<span class="badge badge-success">🟢 GPS Aktif</span>'
                 : '<span class="badge badge-error">🔴 GPS Tidak Aktif</span>'
         }
@@ -667,9 +772,9 @@ export class LocationFeatures {
             <span>${message}</span>
             <button class="btn btn-sm btn-ghost" onclick="this.parentElement.remove()">✕</button>
         `
-        
+
         document.body.appendChild(toast)
-        
+
         // Auto remove after 5 seconds
         setTimeout(() => {
             if (toast.parentElement) {

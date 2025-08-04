@@ -14,7 +14,7 @@ export class AdvancedAnalytics {
             success: '#10b981',
             warning: '#f59e0b',
             error: '#ef4444',
-            info: '#06b6d4'
+            info: '#06b6d4',
         }
     }
 
@@ -34,15 +34,17 @@ export class AdvancedAnalytics {
             .sort((a, b) => new Date(b) - new Date(a))
             .slice(0, days)
 
-        return dates.map(date => ({
-            date,
-            ...allData[date]
-        })).reverse()
+        return dates
+            .map(date => ({
+                date,
+                ...allData[date],
+            }))
+            .reverse()
     }
 
     calculateAdvancedMetrics() {
         const data = this.getAnalyticsData(30)
-        
+
         if (data.length === 0) {
             return {
                 totalDays: 0,
@@ -54,25 +56,27 @@ export class AdvancedAnalytics {
                 worstDay: null,
                 trends: {},
                 platformPerformance: {},
-                predictions: {}
+                predictions: {},
             }
         }
 
         const totalEarnings = data.reduce((sum, day) => sum + (day.results?.pendapatanBersih || 0), 0)
         const totalDistance = data.reduce((sum, day) => sum + (day.fuel?.jarak || 0), 0)
         const avgDailyEarnings = totalEarnings / data.length
-        
+
         // Platform performance
         const platformPerformance = this.calculatePlatformPerformance(data)
-        
+
         // Best and worst days
-        const sortedByEarnings = [...data].sort((a, b) => (b.results?.pendapatanBersih || 0) - (a.results?.pendapatanBersih || 0))
+        const sortedByEarnings = [...data].sort(
+            (a, b) => (b.results?.pendapatanBersih || 0) - (a.results?.pendapatanBersih || 0)
+        )
         const bestDay = sortedByEarnings[0]
         const worstDay = sortedByEarnings[sortedByEarnings.length - 1]
 
         // Trends
         const trends = this.calculateTrends(data)
-        
+
         // Predictions
         const predictions = this.calculatePredictions(data)
 
@@ -81,12 +85,15 @@ export class AdvancedAnalytics {
             avgDailyEarnings,
             totalEarnings,
             totalDistance,
-            avgFuelEfficiency: totalDistance > 0 ? totalDistance / data.reduce((sum, day) => sum + (day.fuel?.literTerpakai || 0), 0) : 0,
+            avgFuelEfficiency:
+                totalDistance > 0
+                    ? totalDistance / data.reduce((sum, day) => sum + (day.fuel?.literTerpakai || 0), 0)
+                    : 0,
             bestDay,
             worstDay,
             trends,
             platformPerformance,
-            predictions
+            predictions,
         }
     }
 
@@ -98,13 +105,14 @@ export class AdvancedAnalytics {
             const platformData = data.map(day => day.platforms?.[platform] || { kotor: 0 })
             const totalEarnings = platformData.reduce((sum, p) => sum + p.kotor, 0)
             const avgDaily = totalEarnings / data.length
-            const contribution = totalEarnings / data.reduce((sum, day) => sum + (day.results?.totalKotor || 0), 0) * 100
+            const contribution =
+                (totalEarnings / data.reduce((sum, day) => sum + (day.results?.totalKotor || 0), 0)) * 100
 
             performance[platform] = {
                 totalEarnings,
                 avgDaily,
                 contribution: isNaN(contribution) ? 0 : contribution,
-                trend: this.calculatePlatformTrend(platformData)
+                trend: this.calculatePlatformTrend(platformData),
             }
         })
 
@@ -113,10 +121,10 @@ export class AdvancedAnalytics {
 
     calculatePlatformTrend(platformData) {
         if (platformData.length < 2) return 'stable'
-        
+
         const recent = platformData.slice(-7).reduce((sum, p) => sum + p.kotor, 0) / 7
         const previous = platformData.slice(-14, -7).reduce((sum, p) => sum + p.kotor, 0) / 7
-        
+
         if (recent > previous * 1.1) return 'up'
         if (recent < previous * 0.9) return 'down'
         return 'stable'
@@ -125,17 +133,19 @@ export class AdvancedAnalytics {
     calculateTrends(data) {
         const recentWeek = data.slice(-7)
         const previousWeek = data.slice(-14, -7)
-        
-        const recentAvg = recentWeek.reduce((sum, day) => sum + (day.results?.pendapatanBersih || 0), 0) / recentWeek.length
-        const previousAvg = previousWeek.reduce((sum, day) => sum + (day.results?.pendapatanBersih || 0), 0) / previousWeek.length
-        
+
+        const recentAvg =
+            recentWeek.reduce((sum, day) => sum + (day.results?.pendapatanBersih || 0), 0) / recentWeek.length
+        const previousAvg =
+            previousWeek.reduce((sum, day) => sum + (day.results?.pendapatanBersih || 0), 0) / previousWeek.length
+
         const earningsTrend = recentAvg > previousAvg ? 'up' : recentAvg < previousAvg ? 'down' : 'stable'
-        const trendPercentage = previousAvg > 0 ? ((recentAvg - previousAvg) / previousAvg * 100) : 0
+        const trendPercentage = previousAvg > 0 ? ((recentAvg - previousAvg) / previousAvg) * 100 : 0
 
         return {
             earnings: earningsTrend,
             percentage: Math.abs(trendPercentage).toFixed(1),
-            direction: trendPercentage > 0 ? 'positive' : 'negative'
+            direction: trendPercentage > 0 ? 'positive' : 'negative',
         }
     }
 
@@ -145,16 +155,16 @@ export class AdvancedAnalytics {
         // Simple linear regression for prediction
         const earnings = data.map((day, index) => ({ x: index, y: day.results?.pendapatanBersih || 0 }))
         const { slope, intercept } = this.linearRegression(earnings)
-        
+
         const nextWeekPrediction = (slope * (data.length + 7) + intercept) * 7
         const nextMonthPrediction = (slope * (data.length + 30) + intercept) * 30
-        
+
         const confidence = data.length >= 30 ? 'high' : data.length >= 14 ? 'medium' : 'low'
 
         return {
             nextWeek: Math.max(0, nextWeekPrediction),
             nextMonth: Math.max(0, nextMonthPrediction),
-            confidence
+            confidence,
         }
     }
 
@@ -181,27 +191,28 @@ export class AdvancedAnalytics {
                 type: 'success',
                 icon: '📈',
                 title: 'Pendapatan Meningkat',
-                message: `Pendapatan naik ${metrics.trends.percentage}% minggu ini! Pertahankan performa.`
+                message: `Pendapatan naik ${metrics.trends.percentage}% minggu ini! Pertahankan performa.`,
             })
         } else if (metrics.trends.earnings === 'down') {
             insights.push({
                 type: 'warning',
                 icon: '📉',
                 title: 'Pendapatan Menurun',
-                message: `Pendapatan turun ${metrics.trends.percentage}% minggu ini. Coba fokus ke platform terbaik.`
+                message: `Pendapatan turun ${metrics.trends.percentage}% minggu ini. Coba fokus ke platform terbaik.`,
             })
         }
 
         // Platform insights
-        const bestPlatform = Object.entries(metrics.platformPerformance)
-            .sort(([,a], [,b]) => b.contribution - a.contribution)[0]
-        
+        const bestPlatform = Object.entries(metrics.platformPerformance).sort(
+            ([, a], [, b]) => b.contribution - a.contribution
+        )[0]
+
         if (bestPlatform) {
             insights.push({
                 type: 'info',
                 icon: '🏆',
                 title: 'Platform Terbaik',
-                message: `${bestPlatform[0].toUpperCase()} kontribusi ${bestPlatform[1].contribution.toFixed(1)}% dari total pendapatan.`
+                message: `${bestPlatform[0].toUpperCase()} kontribusi ${bestPlatform[1].contribution.toFixed(1)}% dari total pendapatan.`,
             })
         }
 
@@ -211,7 +222,7 @@ export class AdvancedAnalytics {
                 type: 'success',
                 icon: '⛽',
                 title: 'Efisiensi BBM Baik',
-                message: `Konsumsi BBM ${metrics.avgFuelEfficiency.toFixed(1)} km/liter. Sangat efisien!`
+                message: `Konsumsi BBM ${metrics.avgFuelEfficiency.toFixed(1)} km/liter. Sangat efisien!`,
             })
         }
 
@@ -221,7 +232,7 @@ export class AdvancedAnalytics {
                 type: 'info',
                 icon: '🔮',
                 title: 'Prediksi Bulan Depan',
-                message: `Estimasi pendapatan bulan depan: Rp ${this.formatCurrency(metrics.predictions.nextMonth)}`
+                message: `Estimasi pendapatan bulan depan: Rp ${this.formatCurrency(metrics.predictions.nextMonth)}`,
             })
         }
 
@@ -235,27 +246,27 @@ export class AdvancedAnalytics {
     exportAdvancedReport() {
         const metrics = this.calculateAdvancedMetrics()
         const data = this.getAnalyticsData(30)
-        
+
         let report = `RELI - LAPORAN ANALITIK LANJUTAN\n`
         report += `Periode: ${data.length} hari terakhir\n`
         report += `Tanggal: ${new Date().toLocaleDateString('id-ID')}\n\n`
-        
+
         report += `RINGKASAN PERFORMA:\n`
         report += `• Total Pendapatan: Rp ${this.formatCurrency(metrics.totalEarnings)}\n`
         report += `• Rata-rata Harian: Rp ${this.formatCurrency(metrics.avgDailyEarnings)}\n`
         report += `• Total Jarak: ${metrics.totalDistance.toFixed(1)} km\n`
         report += `• Efisiensi BBM: ${metrics.avgFuelEfficiency.toFixed(1)} km/liter\n\n`
-        
+
         report += `PERFORMA PLATFORM:\n`
         Object.entries(metrics.platformPerformance).forEach(([platform, perf]) => {
             report += `• ${platform.toUpperCase()}: Rp ${this.formatCurrency(perf.totalEarnings)} (${perf.contribution.toFixed(1)}%)\n`
         })
-        
+
         report += `\nTREN & PREDIKSI:\n`
         report += `• Tren Minggu Ini: ${metrics.trends.earnings === 'up' ? '📈 Naik' : metrics.trends.earnings === 'down' ? '📉 Turun' : '➡️ Stabil'} ${metrics.trends.percentage}%\n`
         report += `• Prediksi Minggu Depan: Rp ${this.formatCurrency(metrics.predictions.nextWeek)}\n`
         report += `• Prediksi Bulan Depan: Rp ${this.formatCurrency(metrics.predictions.nextMonth)}\n`
-        
+
         // Download as text file
         const blob = new Blob([report], { type: 'text/plain' })
         const url = window.URL.createObjectURL(blob)
@@ -304,7 +315,9 @@ export class AdvancedAnalytics {
                 <div class="card bg-base-100 p-4 mb-4">
                     <h3 class="font-bold mb-3">🏢 Performa Platform</h3>
                     <div class="space-y-2">
-                        ${Object.entries(metrics.platformPerformance).map(([platform, perf]) => `
+                        ${Object.entries(metrics.platformPerformance)
+                            .map(
+                                ([platform, perf]) => `
                             <div class="flex justify-between items-center p-2 bg-base-200 rounded">
                                 <div>
                                     <span class="font-medium">${platform.toUpperCase()}</span>
@@ -317,7 +330,9 @@ export class AdvancedAnalytics {
                                     </span>
                                 </div>
                             </div>
-                        `).join('')}
+                        `
+                            )
+                            .join('')}
                     </div>
                 </div>
 
@@ -325,7 +340,9 @@ export class AdvancedAnalytics {
                 <div class="card bg-base-100 p-4 mb-4">
                     <h3 class="font-bold mb-3">💡 AI Insights</h3>
                     <div class="space-y-2">
-                        ${insights.map(insight => `
+                        ${insights
+                            .map(
+                                insight => `
                             <div class="alert alert-${insight.type === 'success' ? 'success' : insight.type === 'warning' ? 'warning' : 'info'} py-2">
                                 <div class="flex items-start gap-2">
                                     <span class="text-lg">${insight.icon}</span>
@@ -335,7 +352,9 @@ export class AdvancedAnalytics {
                                     </div>
                                 </div>
                             </div>
-                        `).join('')}
+                        `
+                            )
+                            .join('')}
                     </div>
                 </div>
 

@@ -10,30 +10,30 @@ export class EarningsOptimizer {
     initOptimizationRules() {
         return {
             timeSlots: {
-                'peak_morning': { start: 7, end: 9, multiplier: 1.4, description: 'Rush hour pagi' },
-                'lunch': { start: 11, end: 14, multiplier: 1.2, description: 'Jam makan siang' },
-                'peak_evening': { start: 17, end: 20, multiplier: 1.5, description: 'Rush hour sore' },
-                'dinner': { start: 19, end: 22, multiplier: 1.3, description: 'Jam makan malam' },
-                'late_night': { start: 22, end: 24, multiplier: 1.1, description: 'Malam hari' }
+                peak_morning: { start: 7, end: 9, multiplier: 1.4, description: 'Rush hour pagi' },
+                lunch: { start: 11, end: 14, multiplier: 1.2, description: 'Jam makan siang' },
+                peak_evening: { start: 17, end: 20, multiplier: 1.5, description: 'Rush hour sore' },
+                dinner: { start: 19, end: 22, multiplier: 1.3, description: 'Jam makan malam' },
+                late_night: { start: 22, end: 24, multiplier: 1.1, description: 'Malam hari' },
             },
             platforms: {
-                'grab': { commission: 0.2, surge_frequency: 0.3, avg_distance: 8.5 },
-                'gojek': { commission: 0.2, surge_frequency: 0.25, avg_distance: 7.2 },
-                'maxim': { commission: 0.15, surge_frequency: 0.2, avg_distance: 9.1 },
-                'indrive': { commission: 0.1, surge_frequency: 0.15, avg_distance: 10.3 }
+                grab: { commission: 0.2, surge_frequency: 0.3, avg_distance: 8.5 },
+                gojek: { commission: 0.2, surge_frequency: 0.25, avg_distance: 7.2 },
+                maxim: { commission: 0.15, surge_frequency: 0.2, avg_distance: 9.1 },
+                indrive: { commission: 0.1, surge_frequency: 0.15, avg_distance: 10.3 },
             },
             weather: {
-                'sunny': { demand_multiplier: 1.0, efficiency_impact: 1.0 },
-                'rainy': { demand_multiplier: 1.3, efficiency_impact: 0.9 },
-                'cloudy': { demand_multiplier: 1.1, efficiency_impact: 1.0 }
+                sunny: { demand_multiplier: 1.0, efficiency_impact: 1.0 },
+                rainy: { demand_multiplier: 1.3, efficiency_impact: 0.9 },
+                cloudy: { demand_multiplier: 1.1, efficiency_impact: 1.0 },
             },
             locations: {
-                'jakarta_pusat': { demand_score: 9, competition_level: 8, avg_fare: 25000 },
-                'jakarta_selatan': { demand_score: 8, competition_level: 7, avg_fare: 22000 },
-                'depok': { demand_score: 6, competition_level: 5, avg_fare: 18000 },
-                'bandung': { demand_score: 7, competition_level: 6, avg_fare: 20000 },
-                'yogyakarta': { demand_score: 6, competition_level: 5, avg_fare: 16000 }
-            }
+                jakarta_pusat: { demand_score: 9, competition_level: 8, avg_fare: 25000 },
+                jakarta_selatan: { demand_score: 8, competition_level: 7, avg_fare: 22000 },
+                depok: { demand_score: 6, competition_level: 5, avg_fare: 18000 },
+                bandung: { demand_score: 7, competition_level: 6, avg_fare: 20000 },
+                yogyakarta: { demand_score: 6, competition_level: 5, avg_fare: 16000 },
+            },
         }
     }
 
@@ -60,7 +60,7 @@ export class EarningsOptimizer {
                 bestPlatform: null,
                 worstPlatform: null,
                 peakHours: [],
-                efficiency: 0
+                efficiency: 0,
             }
         }
 
@@ -76,21 +76,20 @@ export class EarningsOptimizer {
             platformPerformance[platform] = {
                 total,
                 avg,
-                consistency: this.calculateConsistency(earnings)
+                consistency: this.calculateConsistency(earnings),
             }
         })
 
-        const bestPlatform = Object.entries(platformPerformance)
-            .sort(([, a], [, b]) => b.avg - a.avg)[0]
-        const worstPlatform = Object.entries(platformPerformance)
-            .sort(([, a], [, b]) => a.avg - b.avg)[0]
+        const bestPlatform = Object.entries(platformPerformance).sort(([, a], [, b]) => b.avg - a.avg)[0]
+        const worstPlatform = Object.entries(platformPerformance).sort(([, a], [, b]) => a.avg - b.avg)[0]
 
         return {
-            avgDailyEarnings: last30Days.reduce((sum, day) => sum + (day.results?.pendapatanBersih || 0), 0) / last30Days.length,
+            avgDailyEarnings:
+                last30Days.reduce((sum, day) => sum + (day.results?.pendapatanBersih || 0), 0) / last30Days.length,
             bestPlatform: bestPlatform ? { name: bestPlatform[0], ...bestPlatform[1] } : null,
             worstPlatform: worstPlatform ? { name: worstPlatform[0], ...worstPlatform[1] } : null,
             platformPerformance,
-            efficiency: this.calculateOverallEfficiency(last30Days)
+            efficiency: this.calculateOverallEfficiency(last30Days),
         }
     }
 
@@ -99,7 +98,7 @@ export class EarningsOptimizer {
         const avg = earnings.reduce((sum, e) => sum + e, 0) / earnings.length
         const variance = earnings.reduce((sum, e) => sum + Math.pow(e - avg, 2), 0) / earnings.length
         const stdDev = Math.sqrt(variance)
-        return avg > 0 ? Math.max(0, 100 - (stdDev / avg * 100)) : 0
+        return avg > 0 ? Math.max(0, 100 - (stdDev / avg) * 100) : 0
     }
 
     calculateOverallEfficiency(data) {
@@ -107,7 +106,7 @@ export class EarningsOptimizer {
         const totalDistance = data.reduce((sum, day) => sum + (day.fuel?.jarak || 0), 0)
         const totalFuelCost = data.reduce((sum, day) => sum + (day.results?.biayaBBM || 0), 0)
 
-        return totalDistance > 0 ? (totalEarnings / totalDistance) : 0
+        return totalDistance > 0 ? totalEarnings / totalDistance : 0
     }
 
     generateOptimizationRecommendations() {
@@ -126,13 +125,14 @@ export class EarningsOptimizer {
                 title: 'Waktu Optimal Aktif',
                 message: `Sekarang ${currentTimeSlot.description} (multiplier ${currentTimeSlot.multiplier}x). Waktu yang tepat untuk aktif!`,
                 action: 'Mulai kerja sekarang untuk memaksimalkan pendapatan.',
-                impact: `+${((currentTimeSlot.multiplier - 1) * 100).toFixed(0)}% potensi pendapatan`
+                impact: `+${((currentTimeSlot.multiplier - 1) * 100).toFixed(0)}% potensi pendapatan`,
             })
         }
 
         // Platform recommendations
         if (performance.bestPlatform && performance.worstPlatform) {
-            const improvement = ((performance.bestPlatform.avg - performance.worstPlatform.avg) / performance.worstPlatform.avg * 100)
+            const improvement =
+                ((performance.bestPlatform.avg - performance.worstPlatform.avg) / performance.worstPlatform.avg) * 100
             if (improvement > 20) {
                 recommendations.push({
                     type: 'platform',
@@ -141,7 +141,7 @@ export class EarningsOptimizer {
                     title: 'Fokus Platform Terbaik',
                     message: `${performance.bestPlatform.name.toUpperCase()} performa ${improvement.toFixed(0)}% lebih baik dari ${performance.worstPlatform.name.toUpperCase()}`,
                     action: `Prioritaskan ${performance.bestPlatform.name.toUpperCase()} untuk meningkatkan pendapatan.`,
-                    impact: `+Rp ${this.formatCurrency(performance.bestPlatform.avg - performance.worstPlatform.avg)}/hari`
+                    impact: `+Rp ${this.formatCurrency(performance.bestPlatform.avg - performance.worstPlatform.avg)}/hari`,
                 })
             }
         }
@@ -155,7 +155,7 @@ export class EarningsOptimizer {
                 title: 'Tingkatkan Efisiensi',
                 message: `Efisiensi saat ini Rp ${this.formatCurrency(performance.efficiency)}/km masih bisa ditingkatkan`,
                 action: 'Pilih order jarak menengah (5-15km) dan hindari macet panjang.',
-                impact: 'Potensi +15-25% pendapatan bersih'
+                impact: 'Potensi +15-25% pendapatan bersih',
             })
         }
 
@@ -172,7 +172,7 @@ export class EarningsOptimizer {
         }
 
         return recommendations.sort((a, b) => {
-            const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 }
+            const priorityOrder = { high: 3, medium: 2, low: 1 }
             return priorityOrder[b.priority] - priorityOrder[a.priority]
         })
     }
@@ -199,7 +199,7 @@ export class EarningsOptimizer {
                 title: 'Potensi Hujan',
                 message: 'Waktu yang biasanya hujan. Demand naik tapi hati-hati di jalan.',
                 action: 'Siapkan jas hujan dan fokus ke area yang tidak banjir.',
-                impact: '+30% demand, tapi -10% efisiensi'
+                impact: '+30% demand, tapi -10% efisiensi',
             }
         }
         return null
@@ -209,7 +209,8 @@ export class EarningsOptimizer {
         const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
         const dayName = dayNames[day]
 
-        if (day === 0 || day === 6) { // Weekend
+        if (day === 0 || day === 6) {
+            // Weekend
             return {
                 type: 'day',
                 priority: 'medium',
@@ -217,9 +218,10 @@ export class EarningsOptimizer {
                 title: 'Strategi Weekend',
                 message: `Hari ${dayName} - fokus ke area rekreasi dan mall`,
                 action: 'Target area wisata, mall, dan tempat hiburan. Mulai agak siang.',
-                impact: 'Jarak lebih jauh tapi tarif lebih tinggi'
+                impact: 'Jarak lebih jauh tapi tarif lebih tinggi',
             }
-        } else if (day >= 1 && day <= 5) { // Weekday
+        } else if (day >= 1 && day <= 5) {
+            // Weekday
             return {
                 type: 'day',
                 priority: 'low',
@@ -227,7 +229,7 @@ export class EarningsOptimizer {
                 title: 'Strategi Weekday',
                 message: `Hari ${dayName} - fokus ke area perkantoran dan bisnis`,
                 action: 'Target area CBD, perkantoran, dan stasiun. Mulai pagi.',
-                impact: 'Order lebih konsisten dengan pola rush hour'
+                impact: 'Order lebih konsisten dengan pola rush hour',
             }
         }
         return null
@@ -258,7 +260,7 @@ export class EarningsOptimizer {
             current: baseEarnings,
             optimized: optimizedEarnings,
             improvement: optimizedEarnings - baseEarnings,
-            percentage: baseEarnings > 0 ? ((optimizedEarnings - baseEarnings) / baseEarnings * 100) : 0
+            percentage: baseEarnings > 0 ? ((optimizedEarnings - baseEarnings) / baseEarnings) * 100 : 0,
         }
     }
 
@@ -270,7 +272,7 @@ export class EarningsOptimizer {
             immediate: recommendations.filter(r => r.priority === 'high').slice(0, 2),
             shortTerm: recommendations.filter(r => r.priority === 'medium').slice(0, 3),
             longTerm: recommendations.filter(r => r.priority === 'low'),
-            potential
+            potential,
         }
     }
 
@@ -351,7 +353,9 @@ export class EarningsOptimizer {
                 <div class="card bg-base-100 p-4 mb-4">
                     <h3 class="font-bold mb-3 text-error">🔥 Aksi Segera (Prioritas Tinggi)</h3>
                     <div class="space-y-3">
-                        ${actionPlan.immediate.map(rec => `
+                        ${actionPlan.immediate
+                            .map(
+                                rec => `
                             <div class="alert alert-error">
                                 <div class="flex items-start gap-3">
                                     <span class="text-xl">${rec.icon}</span>
@@ -363,7 +367,9 @@ export class EarningsOptimizer {
                                     </div>
                                 </div>
                             </div>
-                        `).join('')}
+                        `
+                            )
+                            .join('')}
                     </div>
                 </div>
 
@@ -371,7 +377,9 @@ export class EarningsOptimizer {
                 <div class="card bg-base-100 p-4 mb-4">
                     <h3 class="font-bold mb-3 text-warning">⚡ Aksi Jangka Pendek</h3>
                     <div class="space-y-2">
-                        ${actionPlan.shortTerm.map(rec => `
+                        ${actionPlan.shortTerm
+                            .map(
+                                rec => `
                             <div class="alert alert-warning py-2">
                                 <div class="flex items-start gap-2">
                                     <span class="text-lg">${rec.icon}</span>
@@ -382,7 +390,9 @@ export class EarningsOptimizer {
                                     </div>
                                 </div>
                             </div>
-                        `).join('')}
+                        `
+                            )
+                            .join('')}
                     </div>
                 </div>
 

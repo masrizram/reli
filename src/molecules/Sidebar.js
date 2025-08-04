@@ -8,12 +8,12 @@ export class Sidebar {
                 totalKotor: 0,
                 biayaBBM: 0,
                 totalAdditionalCosts: 0,
-                pendapatanBersih: 0
+                pendapatanBersih: 0,
             },
             fuel: {
                 literTerpakai: 0,
-                jarak: 0
-            }
+                jarak: 0,
+            },
         }
     }
 
@@ -41,11 +41,11 @@ export class Sidebar {
         if (window.innerWidth < 1024) {
             return
         }
-        
+
         this.isCollapsed = !this.isCollapsed
         const sidebar = document.querySelector('.sidebar')
         const mainArea = document.querySelector('#main-area')
-        
+
         if (sidebar) {
             if (this.isCollapsed) {
                 sidebar.classList.add('sidebar-collapsed')
@@ -59,7 +59,7 @@ export class Sidebar {
                 }
             }
         }
-        
+
         // Update stats visibility
         this.updateStatsVisibility()
     }
@@ -67,7 +67,7 @@ export class Sidebar {
     updateStatsVisibility() {
         const statsElement = document.querySelector('#sidebar-stats')
         const quickActions = document.querySelector('.sidebar-actions')
-        
+
         if (statsElement) {
             if (this.isCollapsed) {
                 statsElement.style.display = 'none'
@@ -75,7 +75,7 @@ export class Sidebar {
                 statsElement.style.display = 'block'
             }
         }
-        
+
         if (quickActions) {
             if (this.isCollapsed) {
                 quickActions.style.display = 'none'
@@ -247,19 +247,19 @@ export class Sidebar {
             try {
                 // Navigation items
                 container.querySelectorAll('.sidebar-item').forEach(item => {
-                    item.addEventListener('click', (e) => {
+                    item.addEventListener('click', e => {
                         e.preventDefault()
                         e.stopPropagation()
-                        
+
                         const view = e.target.closest('.sidebar-item').dataset.view
                         if (view && this.onNavigate) {
                             this.onNavigate(view)
-                            
+
                             // Close mobile sidebar after navigation
                             if (window.innerWidth < 1024) {
                                 const sidebar = document.querySelector('.sidebar')
                                 const overlay = document.querySelector('.sidebar-overlay')
-                                
+
                                 if (sidebar && overlay) {
                                     sidebar.classList.remove('sidebar-open')
                                     overlay.classList.remove('show')
@@ -273,7 +273,7 @@ export class Sidebar {
                 // Collapse button
                 const collapseBtn = container.querySelector('.collapse-btn')
                 if (collapseBtn) {
-                    collapseBtn.addEventListener('click', (e) => {
+                    collapseBtn.addEventListener('click', e => {
                         e.preventDefault()
                         e.stopPropagation()
                         this.toggleCollapse()
@@ -286,21 +286,21 @@ export class Sidebar {
                 const quickExport = container.querySelector('.quick-export')
 
                 if (quickCalculate) {
-                    quickCalculate.addEventListener('click', (e) => {
+                    quickCalculate.addEventListener('click', e => {
                         e.preventDefault()
                         document.dispatchEvent(new CustomEvent('reli-auto-calculate'))
                     })
                 }
 
                 if (quickWhatsapp) {
-                    quickWhatsapp.addEventListener('click', (e) => {
+                    quickWhatsapp.addEventListener('click', e => {
                         e.preventDefault()
                         document.dispatchEvent(new CustomEvent('reli-whatsapp-export'))
                     })
                 }
 
                 if (quickExport) {
-                    quickExport.addEventListener('click', (e) => {
+                    quickExport.addEventListener('click', e => {
                         e.preventDefault()
                         document.dispatchEvent(new CustomEvent('reli-csv-export'))
                     })

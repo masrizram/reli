@@ -427,9 +427,9 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
                 <button class="btn btn-sm btn-circle btn-ghost" onclick="this.closest('.optimization-alert').remove()">✕</button>
             </div>
         `
-        
+
         document.body.appendChild(alert)
-        
+
         setTimeout(() => {
             if (alert.parentElement) {
                 alert.remove()
@@ -444,9 +444,9 @@ _Dibuat dengan RELI - Rangkuman Earnings Lintas-Industri_`.trim()
             platforms: this.platforms,
             fuel: this.fuel,
             additionalCosts: this.additionalCosts,
-            results: this.results
+            results: this.results,
         }
-        
+
         // Store in localStorage as "cloud" backup
         localStorage.setItem('reli-cloud-sync', JSON.stringify(data))
         console.log('Data synced to cloud:', data)

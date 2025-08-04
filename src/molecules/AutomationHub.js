@@ -13,16 +13,18 @@ export class AutomationHub {
     loadAutomations() {
         try {
             const saved = localStorage.getItem('reli-automations')
-            return saved ? JSON.parse(saved) : {
-                autoCalculate: { enabled: true, interval: 5000 },
-                autoSave: { enabled: true, interval: 30000 },
-                autoBackup: { enabled: true, interval: 3600000 }, // 1 hour
-                autoOptimize: { enabled: false, interval: 1800000 }, // 30 minutes
-                autoNotify: { enabled: true, interval: 60000 }, // 1 minute
-                autoSync: { enabled: false, interval: 300000 }, // 5 minutes
-                smartAlerts: { enabled: true, threshold: 0.8 },
-                autoExport: { enabled: false, time: '23:59' }
-            }
+            return saved
+                ? JSON.parse(saved)
+                : {
+                      autoCalculate: { enabled: true, interval: 5000 },
+                      autoSave: { enabled: true, interval: 30000 },
+                      autoBackup: { enabled: true, interval: 3600000 }, // 1 hour
+                      autoOptimize: { enabled: false, interval: 1800000 }, // 30 minutes
+                      autoNotify: { enabled: true, interval: 60000 }, // 1 minute
+                      autoSync: { enabled: false, interval: 300000 }, // 5 minutes
+                      smartAlerts: { enabled: true, threshold: 0.8 },
+                      autoExport: { enabled: false, time: '23:59' },
+                  }
         } catch (error) {
             console.error('Error loading automations:', error)
             return {}
@@ -128,7 +130,7 @@ export class AutomationHub {
                 const backup = {
                     timestamp: new Date().toISOString(),
                     data: JSON.parse(allData),
-                    version: '1.0'
+                    version: '1.0',
                 }
                 localStorage.setItem('reli-backup', JSON.stringify(backup))
                 this.showAutomationAlert('📦 Auto Backup', 'Backup data berhasil dibuat')
@@ -160,7 +162,7 @@ export class AutomationHub {
     checkSmartAlerts() {
         const today = new Date().toISOString().split('T')[0]
         const todayData = this.getTodayData()
-        
+
         if (!todayData) return
 
         const currentEarnings = todayData.results?.pendapatanBersih || 0
@@ -168,7 +170,7 @@ export class AutomationHub {
         const threshold = this.automations.smartAlerts?.threshold || 0.8
 
         // Alert if earnings are below threshold
-        if (avgEarnings > 0 && currentEarnings < (avgEarnings * threshold)) {
+        if (avgEarnings > 0 && currentEarnings < avgEarnings * threshold) {
             this.showSmartAlert(
                 '⚠️ Pendapatan Rendah',
                 `Pendapatan hari ini (Rp ${this.formatCurrency(currentEarnings)}) di bawah rata-rata`,
@@ -188,7 +190,7 @@ export class AutomationHub {
 
         // Alert for high additional costs
         const additionalCosts = todayData.additionalCosts?.total || 0
-        const earningsRatio = currentEarnings > 0 ? (additionalCosts / currentEarnings) : 0
+        const earningsRatio = currentEarnings > 0 ? additionalCosts / currentEarnings : 0
         if (earningsRatio > 0.3) {
             this.showSmartAlert(
                 '💸 Biaya Tambahan Tinggi',
@@ -280,7 +282,7 @@ export class AutomationHub {
     createAutomationRule(name, config) {
         this.automations[name] = config
         this.saveAutomations()
-        
+
         if (config.enabled && config.interval) {
             this.startAutomation(name)
         }
@@ -295,13 +297,13 @@ export class AutomationHub {
     toggleAutomation(name) {
         if (this.automations[name]) {
             this.automations[name].enabled = !this.automations[name].enabled
-            
+
             if (this.automations[name].enabled) {
                 this.startAutomation(name)
             } else {
                 this.stopAutomation(name)
             }
-            
+
             this.saveAutomations()
         }
     }
@@ -310,7 +312,7 @@ export class AutomationHub {
         const status = {
             total: Object.keys(this.automations).length,
             active: Object.values(this.automations).filter(a => a.enabled).length,
-            running: Object.keys(this.intervals).length
+            running: Object.keys(this.intervals).length,
         }
         return status
     }
@@ -319,7 +321,7 @@ export class AutomationHub {
         const config = {
             timestamp: new Date().toISOString(),
             automations: this.automations,
-            version: '1.0'
+            version: '1.0',
         }
 
         const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' })
@@ -333,7 +335,7 @@ export class AutomationHub {
 
     importAutomationConfig(file) {
         const reader = new FileReader()
-        reader.onload = (e) => {
+        reader.onload = e => {
             try {
                 const config = JSON.parse(e.target.result)
                 if (config.automations) {
@@ -341,12 +343,12 @@ export class AutomationHub {
                     Object.keys(this.intervals).forEach(key => {
                         this.stopAutomation(key)
                     })
-                    
+
                     // Load new config
                     this.automations = config.automations
                     this.saveAutomations()
                     this.initAutomations()
-                    
+
                     alert('✅ Konfigurasi automasi berhasil diimpor!')
                 } else {
                     alert('❌ File konfigurasi tidak valid')
@@ -396,7 +398,9 @@ export class AutomationHub {
                 <div class="card bg-base-100 p-4 mb-4">
                     <h3 class="font-bold mb-3">⚙️ Kontrol Automasi</h3>
                     <div class="space-y-3">
-                        ${Object.entries(this.automations).map(([key, config]) => `
+                        ${Object.entries(this.automations)
+                            .map(
+                                ([key, config]) => `
                             <div class="flex justify-between items-center p-3 bg-base-200 rounded-lg">
                                 <div>
                                     <div class="font-medium">${this.getAutomationTitle(key)}</div>
@@ -412,7 +416,9 @@ export class AutomationHub {
                                            data-automation="${key}">
                                 </div>
                             </div>
-                        `).join('')}
+                        `
+                            )
+                            .join('')}
                     </div>
                 </div>
 
@@ -529,7 +535,7 @@ export class AutomationHub {
             }
 
             if (importInput) {
-                importInput.onchange = (e) => {
+                importInput.onchange = e => {
                     if (e.target.files[0]) {
                         this.importAutomationConfig(e.target.files[0])
                         this.logActivity('Konfigurasi diimpor')
@@ -550,7 +556,7 @@ export class AutomationHub {
             autoNotify: '🔔 Auto Notify',
             autoSync: '☁️ Auto Sync',
             smartAlerts: '🧠 Smart Alerts',
-            autoExport: '📊 Auto Export'
+            autoExport: '📊 Auto Export',
         }
         return titles[key] || key
     }
@@ -564,15 +570,15 @@ export class AutomationHub {
             autoNotify: 'Notifikasi cerdas',
             autoSync: 'Sinkronisasi cloud',
             smartAlerts: 'Peringatan berbasis AI',
-            autoExport: 'Export laporan otomatis'
+            autoExport: 'Export laporan otomatis',
         }
         return descriptions[key] || 'Automasi custom'
     }
 
     formatInterval(ms) {
-        if (ms < 60000) return `${ms/1000}s`
-        if (ms < 3600000) return `${ms/60000}m`
-        return `${ms/3600000}h`
+        if (ms < 60000) return `${ms / 1000}s`
+        if (ms < 3600000) return `${ms / 60000}m`
+        return `${ms / 3600000}h`
     }
 
     logActivity(message) {
@@ -582,9 +588,9 @@ export class AutomationHub {
             const logEntry = document.createElement('div')
             logEntry.className = 'text-xs opacity-70'
             logEntry.textContent = `${timestamp} - ${message}`
-            
+
             logElement.insertBefore(logEntry, logElement.firstChild)
-            
+
             // Keep only last 10 entries
             while (logElement.children.length > 10) {
                 logElement.removeChild(logElement.lastChild)
@@ -599,7 +605,7 @@ export class AutomationHub {
         setTimeout(() => this.triggerAutoBackup(), 2000)
         setTimeout(() => this.triggerAutoOptimize(), 3000)
         setTimeout(() => this.checkSmartAlerts(), 4000)
-        
+
         this.showAutomationAlert('🧪 Test Mode', 'Semua automasi dijalankan untuk testing')
     }
 

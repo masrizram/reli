@@ -15,7 +15,7 @@ export class SmartNotifications {
                 lowFuelWarning: { enabled: true, threshold: 20000 },
                 maintenanceReminder: { enabled: true, kmInterval: 5000 },
                 bestTimeNotification: { enabled: true },
-                weatherRecommendation: { enabled: false }
+                weatherRecommendation: { enabled: false },
             }
         }
     }
@@ -23,13 +23,15 @@ export class SmartNotifications {
     loadSettings() {
         try {
             const saved = localStorage.getItem('reli-notifications')
-            return saved ? JSON.parse(saved) : {
-                dailyReminder: { enabled: true, time: '08:00' },
-                lowFuelWarning: { enabled: true, threshold: 20000 },
-                maintenanceReminder: { enabled: true, kmInterval: 5000 },
-                bestTimeNotification: { enabled: true },
-                weatherRecommendation: { enabled: false }
-            }
+            return saved
+                ? JSON.parse(saved)
+                : {
+                      dailyReminder: { enabled: true, time: '08:00' },
+                      lowFuelWarning: { enabled: true, threshold: 20000 },
+                      maintenanceReminder: { enabled: true, kmInterval: 5000 },
+                      bestTimeNotification: { enabled: true },
+                      weatherRecommendation: { enabled: false },
+                  }
         } catch (error) {
             console.error('Error loading settings:', error)
             return {
@@ -37,7 +39,7 @@ export class SmartNotifications {
                 lowFuelWarning: { enabled: true, threshold: 20000 },
                 maintenanceReminder: { enabled: true, kmInterval: 5000 },
                 bestTimeNotification: { enabled: true },
-                weatherRecommendation: { enabled: false }
+                weatherRecommendation: { enabled: false },
             }
         }
     }
@@ -172,9 +174,12 @@ export class SmartNotifications {
         try {
             // Check every hour for best time recommendations
             console.log('Scheduling best time check')
-            setInterval(() => {
-                this.checkBestTimeToWork()
-            }, 60 * 60 * 1000) // 1 hour
+            setInterval(
+                () => {
+                    this.checkBestTimeToWork()
+                },
+                60 * 60 * 1000
+            ) // 1 hour
         } catch (error) {
             console.error('Error scheduling best time check:', error)
         }
@@ -187,7 +192,7 @@ export class SmartNotifications {
         // Peak hours recommendations
         const peakHours = {
             weekday: [7, 8, 12, 13, 17, 18, 19], // 7-8 AM, 12-1 PM, 5-7 PM
-            weekend: [10, 11, 12, 18, 19, 20] // 10 AM-12 PM, 6-8 PM
+            weekend: [10, 11, 12, 18, 19, 20], // 10 AM-12 PM, 6-8 PM
         }
 
         const isWeekend = day === 0 || day === 6
@@ -206,7 +211,7 @@ export class SmartNotifications {
     showLocationAwareNotification(title, body, tag, actionType = null) {
         // Show regular notification first
         this.showNotification(title, body, tag)
-        
+
         // Add location-based action if available
         if (actionType && 'geolocation' in navigator) {
             setTimeout(() => {
@@ -221,7 +226,8 @@ export class SmartNotifications {
         existing.forEach(n => n.remove())
 
         const notification = document.createElement('div')
-        notification.className = 'reli-location-notification alert alert-success shadow-lg fixed top-20 right-4 z-50 max-w-sm'
+        notification.className =
+            'reli-location-notification alert alert-success shadow-lg fixed top-20 right-4 z-50 max-w-sm'
         notification.style.cssText = `
             animation: slideInRight 0.3s ease-out;
             z-index: 9998;
@@ -285,7 +291,7 @@ export class SmartNotifications {
 
     handleMapsAction(action) {
         navigator.geolocation.getCurrentPosition(
-            (position) => {
+            position => {
                 const lat = position.coords.latitude
                 const lng = position.coords.longitude
                 let mapsUrl = ''
@@ -305,20 +311,22 @@ export class SmartNotifications {
 
                 if (mapsUrl) {
                     window.open(mapsUrl, '_blank')
-                    this.showInAppNotification(
-                        '🗺️ Maps Dibuka',
-                        `Google Maps dibuka untuk: ${action}`
-                    )
+                    this.showInAppNotification('🗺️ Maps Dibuka', `Google Maps dibuka untuk: ${action}`)
                 }
             },
-            (error) => {
+            error => {
                 console.error('Geolocation error:', error)
                 // Fallback to general search
                 let query = ''
                 switch (action) {
-                    case 'fuel': query = 'SPBU'; break
-                    case 'parking': query = 'parkir'; break
-                    default: query = 'lokasi saya'
+                    case 'fuel':
+                        query = 'SPBU'
+                        break
+                    case 'parking':
+                        query = 'parkir'
+                        break
+                    default:
+                        query = 'lokasi saya'
                 }
                 const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(query)}`
                 window.open(mapsUrl, '_blank')
@@ -334,7 +342,8 @@ export class SmartNotifications {
             const hour = new Date().getHours()
 
             // Basic rain prediction based on time patterns
-            if (hour >= 14 && hour <= 17) { // 2-5 PM typical rain time
+            if (hour >= 14 && hour <= 17) {
+                // 2-5 PM typical rain time
                 this.showNotification(
                     '🌧️ RELI - Info Cuaca',
                     'Sore hari biasanya hujan. Siapkan jas hujan dan hati-hati di jalan!',
@@ -360,7 +369,7 @@ export class SmartNotifications {
                         body,
                         tag,
                         requireInteraction: false,
-                        silent: false
+                        silent: false,
                     })
 
                     notification.onshow = () => {
@@ -379,7 +388,6 @@ export class SmartNotifications {
                             // Ignore close errors
                         }
                     }, 8000)
-
                 } catch (error) {
                     console.error('Native notification error:', error)
                 }
@@ -451,108 +459,113 @@ export class SmartNotifications {
     }
 
     markMaintenanceDone() {
-    try {
-        const storageData = JSON.parse(localStorage.getItem('reli-data') || '{}')
-        const dates = Object.keys(storageData).sort()
+        try {
+            const storageData = JSON.parse(localStorage.getItem('reli-data') || '{}')
+            const dates = Object.keys(storageData).sort()
 
-        let totalKm = 0
-        dates.forEach(date => {
-            if (storageData[date] && storageData[date].fuel) {
-                totalKm += storageData[date].fuel.jarak || 0
-            }
-        })
+            let totalKm = 0
+            dates.forEach(date => {
+                if (storageData[date] && storageData[date].fuel) {
+                    totalKm += storageData[date].fuel.jarak || 0
+                }
+            })
 
-        localStorage.setItem('reli-last-maintenance-km', totalKm.toString())
+            localStorage.setItem('reli-last-maintenance-km', totalKm.toString())
 
-        console.log('Maintenance marked at:', totalKm, 'km')
-        alert('✅ Maintenance berhasil dicatat! Reminder berikutnya dalam ' + this.settings.maintenanceReminder.kmInterval + ' km.')
-
-        // Try to show notification if possible
-        if ('Notification' in window && Notification.permission === 'granted') {
-            this.showNotification(
-                '✅ RELI - Maintenance',
-                'Maintenance berhasil dicatat. Reminder berikutnya dalam ' + this.settings.maintenanceReminder.kmInterval + ' km.',
-                'maintenance-done'
+            console.log('Maintenance marked at:', totalKm, 'km')
+            alert(
+                '✅ Maintenance berhasil dicatat! Reminder berikutnya dalam ' +
+                    this.settings.maintenanceReminder.kmInterval +
+                    ' km.'
             )
+
+            // Try to show notification if possible
+            if ('Notification' in window && Notification.permission === 'granted') {
+                this.showNotification(
+                    '✅ RELI - Maintenance',
+                    'Maintenance berhasil dicatat. Reminder berikutnya dalam ' +
+                        this.settings.maintenanceReminder.kmInterval +
+                        ' km.',
+                    'maintenance-done'
+                )
+            }
+        } catch (error) {
+            console.error('Error marking maintenance:', error)
+            alert('❌ Gagal mencatat maintenance. Coba lagi.')
+        }
+    }
+
+    checkNotificationStatus() {
+        const status = {
+            supported: 'Notification' in window,
+            permission: Notification.permission,
+            platform: navigator.platform,
+            userAgent: navigator.userAgent.substring(0, 50) + '...',
         }
 
-    } catch (error) {
-        console.error('Error marking maintenance:', error)
-        alert('❌ Gagal mencatat maintenance. Coba lagi.')
-    }
-}
+        console.log('Notification Status:', status)
 
-checkNotificationStatus() {
-    const status = {
-        supported: 'Notification' in window,
-        permission: Notification.permission,
-        platform: navigator.platform,
-        userAgent: navigator.userAgent.substring(0, 50) + '...'
-    }
+        let message = `📋 STATUS NOTIFIKASI:\n\n`
+        message += `✅ Browser Support: ${status.supported ? 'Ya' : 'Tidak'}\n`
+        message += `🔐 Permission: ${status.permission}\n`
+        message += `💻 Platform: ${status.platform}\n\n`
 
-    console.log('Notification Status:', status)
-
-    let message = `📋 STATUS NOTIFIKASI:\n\n`
-    message += `✅ Browser Support: ${status.supported ? 'Ya' : 'Tidak'}\n`
-    message += `🔐 Permission: ${status.permission}\n`
-    message += `💻 Platform: ${status.platform}\n\n`
-
-    if (!status.supported) {
-        message += `❌ Browser tidak mendukung notifikasi`
-    } else if (status.permission === 'denied') {
-        message += `❌ NOTIFIKASI DIBLOKIR\n\n`
-        message += `🔧 Cara mengaktifkan:\n`
-        if (status.platform.toUpperCase().includes('MAC')) {
-            message += `• Buka System Preferences > Notifications\n`
-            message += `• Cari Brave/Chrome/Safari\n`
-            message += `• Aktifkan "Allow Notifications"\n`
-            message += `• Refresh halaman ini`
+        if (!status.supported) {
+            message += `❌ Browser tidak mendukung notifikasi`
+        } else if (status.permission === 'denied') {
+            message += `❌ NOTIFIKASI DIBLOKIR\n\n`
+            message += `🔧 Cara mengaktifkan:\n`
+            if (status.platform.toUpperCase().includes('MAC')) {
+                message += `• Buka System Preferences > Notifications\n`
+                message += `• Cari Brave/Chrome/Safari\n`
+                message += `• Aktifkan "Allow Notifications"\n`
+                message += `• Refresh halaman ini`
+            } else {
+                message += `• Klik ikon gembok di address bar\n`
+                message += `• Pilih "Allow" untuk notifications\n`
+                message += `• Refresh halaman ini`
+            }
+        } else if (status.permission === 'granted') {
+            message += `✅ NOTIFIKASI AKTIF\n\n`
+            message += `💡 Jika notifikasi tidak muncul:\n`
+            if (status.platform.toUpperCase().includes('MAC')) {
+                message += `• Cek "Do Not Disturb" tidak aktif\n`
+                message += `• Cek System Preferences > Notifications\n`
+                message += `• Pastikan "Banners" atau "Alerts" dipilih`
+            } else {
+                message += `• Cek Windows notification settings\n`
+                message += `• Pastikan browser notifications aktif`
+            }
         } else {
-            message += `• Klik ikon gembok di address bar\n`
-            message += `• Pilih "Allow" untuk notifications\n`
-            message += `• Refresh halaman ini`
+            message += `⚠️ Permission belum diminta\n`
+            message += `Klik "Test Notifikasi" untuk meminta permission`
         }
-    } else if (status.permission === 'granted') {
-        message += `✅ NOTIFIKASI AKTIF\n\n`
-        message += `💡 Jika notifikasi tidak muncul:\n`
-        if (status.platform.toUpperCase().includes('MAC')) {
-            message += `• Cek "Do Not Disturb" tidak aktif\n`
-            message += `• Cek System Preferences > Notifications\n`
-            message += `• Pastikan "Banners" atau "Alerts" dipilih`
-        } else {
-            message += `• Cek Windows notification settings\n`
-            message += `• Pastikan browser notifications aktif`
-        }
-    } else {
-        message += `⚠️ Permission belum diminta\n`
-        message += `Klik "Test Notifikasi" untuk meminta permission`
+
+        alert(message)
     }
 
-    alert(message)
-}
+    formatCurrency(amount) {
+        return new Intl.NumberFormat('id-ID').format(amount)
+    }
 
-formatCurrency(amount) {
-    return new Intl.NumberFormat('id-ID').format(amount)
-}
+    render() {
+        const container = document.createElement('div')
+        container.className = 'card bg-base-200 p-4 mb-4'
 
-render() {
-    const container = document.createElement('div')
-    container.className = 'card bg-base-200 p-4 mb-4'
+        const titleLabel = new Label('Smart Notifications', '🔔')
+        container.appendChild(titleLabel.render())
 
-    const titleLabel = new Label('Smart Notifications', '🔔')
-    container.appendChild(titleLabel.render())
+        // Notification settings
+        const settingsContainer = document.createElement('div')
+        settingsContainer.className = 'mt-4'
+        settingsContainer.style.display = 'flex'
+        settingsContainer.style.flexDirection = 'column'
+        settingsContainer.style.gap = '12px'
 
-    // Notification settings
-    const settingsContainer = document.createElement('div')
-    settingsContainer.className = 'mt-4'
-    settingsContainer.style.display = 'flex'
-    settingsContainer.style.flexDirection = 'column'
-    settingsContainer.style.gap = '12px'
-
-    // Daily reminder setting
-    const dailyReminderDiv = document.createElement('div')
-    dailyReminderDiv.className = 'flex items-center justify-between p-3 bg-base-100 rounded-lg'
-    dailyReminderDiv.innerHTML = `
+        // Daily reminder setting
+        const dailyReminderDiv = document.createElement('div')
+        dailyReminderDiv.className = 'flex items-center justify-between p-3 bg-base-100 rounded-lg'
+        dailyReminderDiv.innerHTML = `
             <div>
                 <div class="font-medium">📅 Daily Reminder</div>
                 <div class="text-sm opacity-70">Pengingat input data harian</div>
@@ -564,12 +577,12 @@ render() {
                        class="toggle toggle-primary" data-setting="daily-toggle">
             </div>
         `
-    settingsContainer.appendChild(dailyReminderDiv)
+        settingsContainer.appendChild(dailyReminderDiv)
 
-    // Low fuel warning setting
-    const lowFuelDiv = document.createElement('div')
-    lowFuelDiv.className = 'flex items-center justify-between p-3 bg-base-100 rounded-lg'
-    lowFuelDiv.innerHTML = `
+        // Low fuel warning setting
+        const lowFuelDiv = document.createElement('div')
+        lowFuelDiv.className = 'flex items-center justify-between p-3 bg-base-100 rounded-lg'
+        lowFuelDiv.innerHTML = `
             <div>
                 <div class="font-medium">⛽ Low Fuel Warning</div>
                 <div class="text-sm opacity-70">Peringatan saldo BBM rendah</div>
@@ -581,12 +594,12 @@ render() {
                        class="toggle toggle-primary" data-setting="fuel-toggle">
             </div>
         `
-    settingsContainer.appendChild(lowFuelDiv)
+        settingsContainer.appendChild(lowFuelDiv)
 
-    // Maintenance reminder setting
-    const maintenanceDiv = document.createElement('div')
-    maintenanceDiv.className = 'flex items-center justify-between p-3 bg-base-100 rounded-lg'
-    maintenanceDiv.innerHTML = `
+        // Maintenance reminder setting
+        const maintenanceDiv = document.createElement('div')
+        maintenanceDiv.className = 'flex items-center justify-between p-3 bg-base-100 rounded-lg'
+        maintenanceDiv.innerHTML = `
             <div>
                 <div class="font-medium">🔧 Maintenance Reminder</div>
                 <div class="text-sm opacity-70">Pengingat service motor</div>
@@ -599,12 +612,12 @@ render() {
                        class="toggle toggle-primary" data-setting="maintenance-toggle">
             </div>
         `
-    settingsContainer.appendChild(maintenanceDiv)
+        settingsContainer.appendChild(maintenanceDiv)
 
-    // Best time notification setting
-    const bestTimeDiv = document.createElement('div')
-    bestTimeDiv.className = 'flex items-center justify-between p-3 bg-base-100 rounded-lg'
-    bestTimeDiv.innerHTML = `
+        // Best time notification setting
+        const bestTimeDiv = document.createElement('div')
+        bestTimeDiv.className = 'flex items-center justify-between p-3 bg-base-100 rounded-lg'
+        bestTimeDiv.innerHTML = `
             <div>
                 <div class="font-medium">🚀 Best Time Notification</div>
                 <div class="text-sm opacity-70">Notifikasi waktu optimal kerja</div>
@@ -612,12 +625,12 @@ render() {
             <input type="checkbox" ${this.settings.bestTimeNotification.enabled ? 'checked' : ''} 
                    class="toggle toggle-primary" data-setting="besttime-toggle">
         `
-    settingsContainer.appendChild(bestTimeDiv)
+        settingsContainer.appendChild(bestTimeDiv)
 
-    // Weather recommendation setting
-    const weatherDiv = document.createElement('div')
-    weatherDiv.className = 'flex items-center justify-between p-3 bg-base-100 rounded-lg'
-    weatherDiv.innerHTML = `
+        // Weather recommendation setting
+        const weatherDiv = document.createElement('div')
+        weatherDiv.className = 'flex items-center justify-between p-3 bg-base-100 rounded-lg'
+        weatherDiv.innerHTML = `
             <div>
                 <div class="font-medium">🌧️ Weather Recommendation</div>
                 <div class="text-sm opacity-70">Rekomendasi berdasarkan cuaca</div>
@@ -625,181 +638,179 @@ render() {
             <input type="checkbox" ${this.settings.weatherRecommendation.enabled ? 'checked' : ''} 
                    class="toggle toggle-primary" data-setting="weather-toggle">
         `
-    settingsContainer.appendChild(weatherDiv)
+        settingsContainer.appendChild(weatherDiv)
 
-    container.appendChild(settingsContainer)
+        container.appendChild(settingsContainer)
 
-    // Action buttons
-    const buttonContainer = document.createElement('div')
-    buttonContainer.className = 'mt-4'
-    buttonContainer.style.display = 'flex'
-    buttonContainer.style.flexWrap = 'wrap'
-    buttonContainer.style.gap = '8px'
+        // Action buttons
+        const buttonContainer = document.createElement('div')
+        buttonContainer.className = 'mt-4'
+        buttonContainer.style.display = 'flex'
+        buttonContainer.style.flexWrap = 'wrap'
+        buttonContainer.style.gap = '8px'
 
-    // Create buttons with proper event handlers
-    const saveButton = document.createElement('button')
-    saveButton.className = 'btn btn-primary'
-    saveButton.innerHTML = '💾 Simpan Pengaturan'
-    saveButton.style.minWidth = '120px'
-    saveButton.addEventListener('click', (e) => {
-        e.preventDefault()
-        console.log('Save button clicked')
-        this.saveCurrentSettings(container)
-    })
-
-    const testButton = document.createElement('button')
-    testButton.className = 'btn btn-secondary'
-    testButton.innerHTML = '🔔 Test Notifikasi'
-    testButton.style.minWidth = '120px'
-    testButton.addEventListener('click', (e) => {
-        e.preventDefault()
-        console.log('Test button clicked')
-        this.testNotification()
-    })
-
-    const statusButton = document.createElement('button')
-    statusButton.className = 'btn btn-info btn-sm'
-    statusButton.innerHTML = '📋 Cek Status'
-    statusButton.style.minWidth = '100px'
-    statusButton.addEventListener('click', (e) => {
-        e.preventDefault()
-        this.checkNotificationStatus()
-    })
-
-    const maintenanceButton = document.createElement('button')
-    maintenanceButton.className = 'btn btn-accent'
-    maintenanceButton.innerHTML = '🔧 Tandai Maintenance'
-    maintenanceButton.style.minWidth = '120px'
-    maintenanceButton.addEventListener('click', (e) => {
-        e.preventDefault()
-        console.log('Maintenance button clicked')
-        this.markMaintenanceDone()
-    })
-
-    const quickMapsButton = document.createElement('button')
-    quickMapsButton.className = 'btn btn-success btn-sm'
-    quickMapsButton.innerHTML = '🗺️ Quick Maps'
-    quickMapsButton.style.minWidth = '100px'
-    quickMapsButton.addEventListener('click', (e) => {
-        e.preventDefault()
-        this.showQuickMapsModal()
-    })
-
-    buttonContainer.appendChild(saveButton)
-    buttonContainer.appendChild(testButton)
-    buttonContainer.appendChild(statusButton)
-    buttonContainer.appendChild(maintenanceButton)
-    buttonContainer.appendChild(quickMapsButton)
-    container.appendChild(buttonContainer)
-
-    return container
-}
-
-saveCurrentSettings(container) {
-    try {
-        // Update settings from form using data attributes
-        const dailyToggle = container.querySelector('[data-setting="daily-toggle"]')
-        const dailyTime = container.querySelector('[data-setting="daily-time"]')
-        const fuelToggle = container.querySelector('[data-setting="fuel-toggle"]')
-        const fuelThreshold = container.querySelector('[data-setting="fuel-threshold"]')
-        const maintenanceToggle = container.querySelector('[data-setting="maintenance-toggle"]')
-        const maintenanceKm = container.querySelector('[data-setting="maintenance-km"]')
-        const besttimeToggle = container.querySelector('[data-setting="besttime-toggle"]')
-        const weatherToggle = container.querySelector('[data-setting="weather-toggle"]')
-
-        if (dailyToggle) this.settings.dailyReminder.enabled = dailyToggle.checked
-        if (dailyTime) this.settings.dailyReminder.time = dailyTime.value
-
-        if (fuelToggle) this.settings.lowFuelWarning.enabled = fuelToggle.checked
-        if (fuelThreshold) this.settings.lowFuelWarning.threshold = parseInt(fuelThreshold.value) || 20000
-
-        if (maintenanceToggle) this.settings.maintenanceReminder.enabled = maintenanceToggle.checked
-        if (maintenanceKm) this.settings.maintenanceReminder.kmInterval = parseInt(maintenanceKm.value) || 5000
-
-        if (besttimeToggle) this.settings.bestTimeNotification.enabled = besttimeToggle.checked
-        if (weatherToggle) this.settings.weatherRecommendation.enabled = weatherToggle.checked
-
-        this.saveSettings()
-        this.scheduleNotifications()
-
-        // Show success message
-        alert('✅ Pengaturan notifikasi berhasil disimpan!')
-        console.log('Settings saved:', this.settings)
-
-    } catch (error) {
-        console.error('Error saving settings:', error)
-        alert('❌ Gagal menyimpan pengaturan. Coba lagi.')
-    }
-}
-
-testNotification() {
-    console.log('Testing notification...')
-
-    // Check notification permission first
-    if (!('Notification' in window)) {
-        alert('❌ Browser tidak mendukung notifikasi')
-        return
-    }
-
-    if (Notification.permission === 'denied') {
-        alert('❌ Notifikasi diblokir. Aktifkan di pengaturan browser.')
-        return
-    }
-
-    if (Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                this.showTestNotification()
-            } else {
-                alert('❌ Permission notifikasi ditolak')
-            }
+        // Create buttons with proper event handlers
+        const saveButton = document.createElement('button')
+        saveButton.className = 'btn btn-primary'
+        saveButton.innerHTML = '💾 Simpan Pengaturan'
+        saveButton.style.minWidth = '120px'
+        saveButton.addEventListener('click', e => {
+            e.preventDefault()
+            console.log('Save button clicked')
+            this.saveCurrentSettings(container)
         })
-    } else {
-        this.showTestNotification()
+
+        const testButton = document.createElement('button')
+        testButton.className = 'btn btn-secondary'
+        testButton.innerHTML = '🔔 Test Notifikasi'
+        testButton.style.minWidth = '120px'
+        testButton.addEventListener('click', e => {
+            e.preventDefault()
+            console.log('Test button clicked')
+            this.testNotification()
+        })
+
+        const statusButton = document.createElement('button')
+        statusButton.className = 'btn btn-info btn-sm'
+        statusButton.innerHTML = '📋 Cek Status'
+        statusButton.style.minWidth = '100px'
+        statusButton.addEventListener('click', e => {
+            e.preventDefault()
+            this.checkNotificationStatus()
+        })
+
+        const maintenanceButton = document.createElement('button')
+        maintenanceButton.className = 'btn btn-accent'
+        maintenanceButton.innerHTML = '🔧 Tandai Maintenance'
+        maintenanceButton.style.minWidth = '120px'
+        maintenanceButton.addEventListener('click', e => {
+            e.preventDefault()
+            console.log('Maintenance button clicked')
+            this.markMaintenanceDone()
+        })
+
+        const quickMapsButton = document.createElement('button')
+        quickMapsButton.className = 'btn btn-success btn-sm'
+        quickMapsButton.innerHTML = '🗺️ Quick Maps'
+        quickMapsButton.style.minWidth = '100px'
+        quickMapsButton.addEventListener('click', e => {
+            e.preventDefault()
+            this.showQuickMapsModal()
+        })
+
+        buttonContainer.appendChild(saveButton)
+        buttonContainer.appendChild(testButton)
+        buttonContainer.appendChild(statusButton)
+        buttonContainer.appendChild(maintenanceButton)
+        buttonContainer.appendChild(quickMapsButton)
+        container.appendChild(buttonContainer)
+
+        return container
     }
-}
 
-showTestNotification() {
-    try {
-        console.log('Creating test notification...')
+    saveCurrentSettings(container) {
+        try {
+            // Update settings from form using data attributes
+            const dailyToggle = container.querySelector('[data-setting="daily-toggle"]')
+            const dailyTime = container.querySelector('[data-setting="daily-time"]')
+            const fuelToggle = container.querySelector('[data-setting="fuel-toggle"]')
+            const fuelThreshold = container.querySelector('[data-setting="fuel-threshold"]')
+            const maintenanceToggle = container.querySelector('[data-setting="maintenance-toggle"]')
+            const maintenanceKm = container.querySelector('[data-setting="maintenance-km"]')
+            const besttimeToggle = container.querySelector('[data-setting="besttime-toggle"]')
+            const weatherToggle = container.querySelector('[data-setting="weather-toggle"]')
 
-        // Show in-app notification immediately
-        this.showInAppNotification(
-            '🔔 RELI - Test Notification',
-            'Notifikasi berfungsi dengan baik! Pengaturan sudah aktif.'
-        )
+            if (dailyToggle) this.settings.dailyReminder.enabled = dailyToggle.checked
+            if (dailyTime) this.settings.dailyReminder.time = dailyTime.value
 
-        // Also try native notification
-        if ('Notification' in window && Notification.permission === 'granted') {
-            try {
-                const notification = new Notification('🔔 RELI - Test Notification', {
-                    body: 'Notifikasi berfungsi dengan baik! Pengaturan sudah aktif.',
-                    tag: 'test',
-                    silent: false
-                })
+            if (fuelToggle) this.settings.lowFuelWarning.enabled = fuelToggle.checked
+            if (fuelThreshold) this.settings.lowFuelWarning.threshold = parseInt(fuelThreshold.value) || 20000
 
-                notification.onclick = () => {
-                    window.focus()
-                    notification.close()
-                }
+            if (maintenanceToggle) this.settings.maintenanceReminder.enabled = maintenanceToggle.checked
+            if (maintenanceKm) this.settings.maintenanceReminder.kmInterval = parseInt(maintenanceKm.value) || 5000
 
-                setTimeout(() => {
-                    try {
-                        notification.close()
-                    } catch (e) {
-                        console.log('Error closing notification:', e)
-                    }
-                }, 8000)
+            if (besttimeToggle) this.settings.bestTimeNotification.enabled = besttimeToggle.checked
+            if (weatherToggle) this.settings.weatherRecommendation.enabled = weatherToggle.checked
 
-                console.log('Native test notification also sent')
-            } catch (error) {
-                console.error('Native notification error:', error)
-            }
+            this.saveSettings()
+            this.scheduleNotifications()
+
+            // Show success message
+            alert('✅ Pengaturan notifikasi berhasil disimpan!')
+            console.log('Settings saved:', this.settings)
+        } catch (error) {
+            console.error('Error saving settings:', error)
+            alert('❌ Gagal menyimpan pengaturan. Coba lagi.')
+        }
+    }
+
+    testNotification() {
+        console.log('Testing notification...')
+
+        // Check notification permission first
+        if (!('Notification' in window)) {
+            alert('❌ Browser tidak mendukung notifikasi')
+            return
         }
 
-        console.log('Test notification sent successfully')
-        alert('✅ Test notifikasi berhasil!\n\nNotifikasi muncul di pojok kanan atas halaman.')
+        if (Notification.permission === 'denied') {
+            alert('❌ Notifikasi diblokir. Aktifkan di pengaturan browser.')
+            return
+        }
 
+        if (Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    this.showTestNotification()
+                } else {
+                    alert('❌ Permission notifikasi ditolak')
+                }
+            })
+        } else {
+            this.showTestNotification()
+        }
+    }
+
+    showTestNotification() {
+        try {
+            console.log('Creating test notification...')
+
+            // Show in-app notification immediately
+            this.showInAppNotification(
+                '🔔 RELI - Test Notification',
+                'Notifikasi berfungsi dengan baik! Pengaturan sudah aktif.'
+            )
+
+            // Also try native notification
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    const notification = new Notification('🔔 RELI - Test Notification', {
+                        body: 'Notifikasi berfungsi dengan baik! Pengaturan sudah aktif.',
+                        tag: 'test',
+                        silent: false,
+                    })
+
+                    notification.onclick = () => {
+                        window.focus()
+                        notification.close()
+                    }
+
+                    setTimeout(() => {
+                        try {
+                            notification.close()
+                        } catch (e) {
+                            console.log('Error closing notification:', e)
+                        }
+                    }, 8000)
+
+                    console.log('Native test notification also sent')
+                } catch (error) {
+                    console.error('Native notification error:', error)
+                }
+            }
+
+            console.log('Test notification sent successfully')
+            alert('✅ Test notifikasi berhasil!\n\nNotifikasi muncul di pojok kanan atas halaman.')
         } catch (error) {
             console.error('Error showing test notification:', error)
             alert('❌ Error: ' + error.message + '\n\nCoba refresh halaman dan test lagi.')
@@ -881,7 +892,7 @@ showTestNotification() {
         }
 
         // Enter key support for custom search
-        modal.querySelector('#custom-search').onkeypress = (e) => {
+        modal.querySelector('#custom-search').onkeypress = e => {
             if (e.key === 'Enter') {
                 modal.querySelector('#custom-search-btn').click()
             }
@@ -890,26 +901,20 @@ showTestNotification() {
 
     openQuickMaps(searchTerm) {
         navigator.geolocation.getCurrentPosition(
-            (position) => {
+            position => {
                 const lat = position.coords.latitude
                 const lng = position.coords.longitude
                 const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(searchTerm)}/@${lat},${lng},15z`
-                
+
                 window.open(mapsUrl, '_blank')
-                this.showInAppNotification(
-                    '🗺️ Maps Dibuka',
-                    `Mencari: ${searchTerm} di sekitar lokasi Anda`
-                )
+                this.showInAppNotification('🗺️ Maps Dibuka', `Mencari: ${searchTerm} di sekitar lokasi Anda`)
             },
-            (error) => {
+            error => {
                 console.error('Geolocation error:', error)
                 // Fallback to general search without location
                 const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(searchTerm)}`
                 window.open(mapsUrl, '_blank')
-                this.showInAppNotification(
-                    '🗺️ Maps Dibuka',
-                    `Mencari: ${searchTerm} (tanpa lokasi GPS)`
-                )
+                this.showInAppNotification('🗺️ Maps Dibuka', `Mencari: ${searchTerm} (tanpa lokasi GPS)`)
             }
         )
     }
