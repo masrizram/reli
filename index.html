@@ -36,6 +36,9 @@
         <!-- Tailwind CSS + DaisyUI -->
         <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
         <script src="https://cdn.tailwindcss.com"></script>
+        
+        <!-- Custom Sidebar CSS -->
+        <link href="/src/styles/sidebar.css" rel="stylesheet" type="text/css" />
 
         <style>
             .currency-input {
@@ -132,10 +135,15 @@
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             }
             
-            /* Sidebar styles */
+            /* Professional Sidebar styles */
             .sidebar {
                 transition: all 0.3s ease;
                 width: 16rem;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 30;
             }
             
             /* Sidebar overlay */
@@ -165,34 +173,40 @@
                 display: flex;
                 align-items: center;
                 gap: 0.75rem;
-                padding: 0.75rem;
-                border-radius: 0.5rem;
+                padding: 0.75rem 1rem;
+                border-radius: 0.75rem;
                 transition: all 0.2s ease;
                 cursor: pointer;
+                margin: 0.125rem 0;
+                font-weight: 500;
+                color: hsl(var(--bc) / 0.7);
             }
             
             .sidebar-item:hover {
-                background-color: hsl(var(--b3));
+                background-color: hsl(var(--p) / 0.1);
+                color: hsl(var(--p));
+                transform: translateX(4px);
             }
             
             .sidebar-item.active {
                 background-color: hsl(var(--p));
                 color: hsl(var(--pc));
+                box-shadow: 0 4px 12px hsl(var(--p) / 0.3);
+            }
+            
+            .sidebar-item.active:hover {
+                transform: none;
+                background-color: hsl(var(--p));
             }
             
             /* Mobile sidebar */
-            @media (max-width: 1024px) {
+            @media (max-width: 1023px) {
                 .sidebar {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    height: 100vh;
-                    z-index: 50;
                     transform: translateX(-100%);
-                    transition: transform 0.3s ease;
+                    z-index: 50;
                 }
                 
-                .sidebar.sidebar-mobile-open {
+                .sidebar.sidebar-open {
                     transform: translateX(0);
                 }
                 
@@ -200,32 +214,94 @@
                     margin-left: 0 !important;
                 }
                 
-                /* Mobile header visibility */
-                .lg\\:hidden {
-                    display: block;
-                }
-                
-                /* Ensure mobile menu button is clickable */
+                /* Mobile menu button */
                 #mobile-menu-btn {
                     z-index: 60;
                     position: relative;
+                }
+                
+                .sidebar-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    z-index: 40;
+                    opacity: 0;
+                    visibility: hidden;
+                    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+                }
+                
+                .sidebar-overlay.show {
+                    opacity: 1;
+                    visibility: visible;
                 }
             }
             
             /* Desktop sidebar */
             @media (min-width: 1024px) {
                 .sidebar {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    height: 100vh;
-                    z-index: 30;
+                    transform: translateX(0);
+                }
+                
+                #main-area {
+                    margin-left: 16rem;
                 }
             }
             
             /* Main content area adjustments */
             .main-content-shifted {
                 margin-left: 4rem;
+            }
+            
+            /* Professional card styles */
+            .card-professional {
+                background: white;
+                border-radius: 0.75rem;
+                box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+                border: 1px solid hsl(var(--b2));
+                transition: all 0.2s ease;
+            }
+            
+            .card-professional:hover {
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+                transform: translateY(-1px);
+            }
+            
+            /* Professional gradient backgrounds */
+            .gradient-primary {
+                background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(var(--s)) 100%);
+            }
+            
+            .gradient-card {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+            
+            /* Icon containers */
+            .icon-container {
+                width: 3rem;
+                height: 3rem;
+                border-radius: 0.75rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+            }
+            
+            /* Stats cards */
+            .stat-card {
+                background: white;
+                border-radius: 0.75rem;
+                padding: 1.5rem;
+                box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+                border: 1px solid hsl(var(--b2));
+                transition: all 0.2s ease;
+            }
+            
+            .stat-card:hover {
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+                transform: translateY(-1px);
             }
             
             /* Mobile responsive adjustments */
@@ -476,75 +552,29 @@
                         fab.addEventListener('click', (e) => {
                             e.preventDefault()
                             e.stopPropagation()
-
                             
                             // Toggle sidebar on mobile
                             const sidebar = document.querySelector('.sidebar')
                             const overlay = document.querySelector('#sidebar-overlay')
                             
-
-                            
                             if (sidebar && overlay) {
-                                sidebar.classList.toggle('sidebar-mobile-open')
-                                overlay.classList.toggle('hidden')
-
-                            } else {
-                                console.error('Sidebar or overlay not found')
+                                const isOpen = sidebar.classList.contains('sidebar-open')
+                                
+                                if (isOpen) {
+                                    sidebar.classList.remove('sidebar-open')
+                                    overlay.classList.remove('show')
+                                    document.body.style.overflow = ''
+                                } else {
+                                    sidebar.classList.add('sidebar-open')
+                                    overlay.classList.add('show')
+                                    document.body.style.overflow = 'hidden'
+                                }
                             }
                         })
-                    } else {
-                        console.error('FAB button not found')
                     }
                 }, 1000)
-
-                // Fallback: Also try to attach to mobile header button
-                setTimeout(() => {
-                    const mobileHeaderBtn = document.getElementById('mobile-menu-btn')
-                    if (mobileHeaderBtn) {
-
-                        mobileHeaderBtn.addEventListener('click', (e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            console.log('Mobile header button clicked')
-                            
-                            const sidebar = document.querySelector('.sidebar')
-                            const overlay = document.querySelector('#sidebar-overlay')
-                            
-                            if (sidebar && overlay) {
-                                sidebar.classList.toggle('sidebar-mobile-open')
-                                overlay.classList.toggle('hidden')
-                                console.log('Mobile menu toggled from header')
-                            }
-                        })
-                    }
-                }, 1500)
             })
 
-                // Handle window resize
-                window.addEventListener('resize', () => {
-                    const sidebar = document.querySelector('.sidebar')
-                    const mainArea = document.getElementById('main-area')
-                    
-                    if (window.innerWidth <= 1024) {
-                        if (sidebar) sidebar.classList.remove('sidebar-open')
-                        if (mainArea) mainArea.style.marginLeft = '0'
-                    } else {
-                        if (mainArea) mainArea.style.marginLeft = '16rem'
-                    }
-                })
-
-                // Close sidebar when clicking outside on mobile
-                document.addEventListener('click', (e) => {
-                    if (window.innerWidth <= 1024) {
-                        const sidebar = document.querySelector('.sidebar')
-                        const fab = document.getElementById('fab-menu')
-                        
-                        if (sidebar && sidebar.classList.contains('sidebar-open') && 
-                            !sidebar.contains(e.target) && e.target !== fab) {
-                            sidebar.classList.remove('sidebar-open')
-                        }
-                    }
-                })
             })
             
             // Performance monitoring
