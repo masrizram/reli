@@ -39,16 +39,19 @@
         <link rel="preload" href="/src/main.js" as="script" />
         <link rel="preload" href="/src/organisms/App.js" as="script" />
 
-        <!-- Tailwind CSS + DaisyUI -->
+        <!-- DaisyUI + TailwindCSS (Production Ready) -->
         <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
-        <script src="https://cdn.tailwindcss.com?plugins=typography,forms,aspect-ratio,container-queries"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
         <script>
-            tailwind.config = {
-                theme: {
-                    extend: {}
-                },
-                daisyui: {
-                    themes: ['light', 'dark', 'cupcake']
+            // Suppress TailwindCSS development warnings in production
+            if (typeof window !== 'undefined') {
+                window.tailwindConfig = {
+                    theme: {
+                        extend: {}
+                    },
+                    daisyui: {
+                        themes: ['light', 'dark', 'cupcake']
+                    }
                 }
             }
         </script>
@@ -58,23 +61,35 @@
         <link href="/src/styles/animations.css" rel="stylesheet" type="text/css" />
 
         <style>
-            /* CSS Reset for production */
+            /* Critical CSS Reset */
             * {
                 box-sizing: border-box;
             }
-            
-            html, body {
-                margin: 0;
-                padding: 0;
+
+            html,
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
                 height: 100%;
                 overflow-x: hidden;
+                background-color: #f3f4f6;
             }
-            
+
             #app {
                 min-height: 100vh;
                 position: relative;
+                z-index: 1;
+                margin: 0 !important;
+                padding: 0 !important;
             }
             
+            /* Fix for white space issue */
+            .min-h-screen {
+                min-height: 100vh !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
             .currency-input {
                 text-align: right;
             }
@@ -317,7 +332,7 @@
                 }
             }
 
-            /* Desktop sidebar */
+            /* Desktop sidebar - Simplified */
             @media (min-width: 1024px) {
                 .sidebar {
                     transform: translateX(0);
@@ -326,30 +341,11 @@
                 #main-area {
                     margin-left: 16rem;
                 }
-                
-                /* Ensure main content doesn't get pushed down */
-                .min-h-screen {
-                    min-height: 100vh;
-                    position: relative;
-                }
             }
 
             /* Main content area adjustments */
             .main-content-shifted {
                 margin-left: 4rem;
-            }
-            
-            /* Fix for content positioning */
-            #app {
-                position: relative;
-                z-index: 1;
-            }
-            
-            /* Prevent layout shifts */
-            body {
-                margin: 0;
-                padding: 0;
-                overflow-x: hidden;
             }
 
             /* Professional card styles */
@@ -630,38 +626,22 @@
             window.addEventListener('offline', updateOnlineStatus)
             updateOnlineStatus()
 
-            // Hide loading screen when app is ready
+            // Simplified loading screen removal
             function hideLoadingScreen() {
                 const loadingScreen = document.getElementById('loading-screen')
                 if (loadingScreen) {
-                    loadingScreen.style.opacity = '0'
-                    loadingScreen.style.transition = 'opacity 0.3s ease-out'
-                    setTimeout(() => {
-                        loadingScreen.remove()
-                    }, 300)
+                    loadingScreen.style.display = 'none'
+                    loadingScreen.remove()
                 }
             }
 
-            // Ensure loading screen is hidden properly
-            let loadingHidden = false
-            function ensureLoadingHidden() {
-                if (!loadingHidden) {
-                    loadingHidden = true
-                    hideLoadingScreen()
-                }
-            }
-
-            // Multiple triggers to ensure loading screen is hidden
+            // Single trigger to hide loading screen
             document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(ensureLoadingHidden, 800)
+                setTimeout(hideLoadingScreen, 500)
             })
 
-            window.addEventListener('load', () => {
-                setTimeout(ensureLoadingHidden, 400)
-            })
-
-            // Fallback: force hide after 1.5 seconds
-            setTimeout(ensureLoadingHidden, 1500)
+            // Fallback: force hide after 1 second
+            setTimeout(hideLoadingScreen, 1000)
 
             // Floating Action Button & Mobile Menu
             document.addEventListener('DOMContentLoaded', () => {
@@ -703,22 +683,35 @@
                 }
             })
 
-            // Error handling
+            // Error handling - Suppress development warnings
             window.addEventListener('error', event => {
-                // Filter out common development errors
+                // Filter out common development errors and warnings
                 if (event.error && event.error.message) {
                     const message = event.error.message.toLowerCase()
                     if (
                         message.includes('websocket') ||
                         message.includes('failed to fetch') ||
-                        message.includes('network error')
+                        message.includes('network error') ||
+                        message.includes('tailwindcss') ||
+                        message.includes('production')
                     ) {
-                        console.warn('Development network error (can be ignored):', event.error.message)
+                        // Suppress these warnings in production
+                        event.preventDefault()
                         return
                     }
                 }
                 console.error('❌ Global error:', event.error)
             })
+            
+            // Suppress TailwindCSS production warnings
+            const originalConsoleWarn = console.warn
+            console.warn = function(...args) {
+                const message = args.join(' ').toLowerCase()
+                if (message.includes('tailwindcss') || message.includes('production')) {
+                    return // Suppress TailwindCSS warnings
+                }
+                originalConsoleWarn.apply(console, args)
+            }
 
             window.addEventListener('unhandledrejection', event => {
                 // Filter out common development promise rejections

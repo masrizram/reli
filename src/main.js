@@ -815,7 +815,7 @@ function renderSidebar() {
 
 function renderDashboard() {
     return `
-        <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="min-height: 100vh"
             <!-- Mobile Header -->
             <div class="navbar bg-white shadow-sm border-b lg:hidden">
                 <div class="navbar-start">
@@ -1036,7 +1036,7 @@ function renderDashboard() {
 
 function renderInputData() {
     return `
-        <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="min-height: 100vh"
             <!-- Mobile Header -->
             <div class="navbar bg-white shadow-sm border-b lg:hidden">
                 <div class="navbar-start">
@@ -1440,7 +1440,7 @@ async function renderAnalytics() {
     const trend = trendResult.success ? trendResult.data : null
 
     return `
-        <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="min-height: 100vh">
             <!-- Mobile Header -->
             <div class="navbar bg-white shadow-sm border-b lg:hidden">
                 <div class="navbar-start">
@@ -1705,7 +1705,7 @@ async function renderOptimizer() {
     const recommendations = hasData ? optimizationResult.data : null
 
     return `
-        <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="min-height: 100vh">
             <!-- Mobile Header -->
             <div class="navbar bg-white shadow-sm border-b lg:hidden">
                 <div class="navbar-start">
@@ -2056,7 +2056,7 @@ async function renderLocation() {
         : []
 
     return `
-        <div class="min-h-screen bg-base-200">
+        <div class="bg-base-200" style="min-height: 100vh">
             <!-- Mobile Header -->
             <div class="navbar bg-primary text-primary-content shadow-lg lg:hidden">
                 <div class="navbar-start">
@@ -2358,7 +2358,7 @@ async function renderLocation() {
 
 function renderSimpleView(title, icon, description) {
     return `
-        <div class="min-h-screen bg-base-200">
+        <div class="bg-base-200" style="min-height: 100vh">
             <!-- Mobile Header -->
             <div class="navbar bg-primary text-primary-content shadow-lg lg:hidden">
                 <div class="navbar-start">
@@ -2498,7 +2498,7 @@ async function initApp() {
         const appElement = document.getElementById('app')
         if (appElement) {
             appElement.innerHTML = `
-                <div class="min-h-screen bg-base-200 flex items-center justify-center p-4">
+                <div class="bg-base-200" style="min-height: 100vh flex items-center justify-center p-4">
                     <div class="card bg-base-100 shadow-xl max-w-md w-full">
                         <div class="card-body text-center">
                             <div class="text-6xl mb-4">❌</div>
