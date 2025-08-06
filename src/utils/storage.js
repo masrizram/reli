@@ -1,7 +1,5 @@
-import { eventBus } from '../core/EventBus.js'
-
 /**
- * Enhanced Storage Manager with backup, sync, and analytics
+ * Clean Storage Manager - No external dependencies
  */
 export class StorageManager {
     constructor() {
@@ -45,7 +43,7 @@ export class StorageManager {
         }
 
         localStorage.setItem(this.storageKey, JSON.stringify(newData))
-        eventBus.emit('storage:migrated', { from: '1.0', to: this.version })
+        console.log('Storage migrated from v1.0 to v2.0')
     }
 
     /**
@@ -75,7 +73,7 @@ export class StorageManager {
         }
 
         this.saveToStorage(allData)
-        eventBus.emit('storage:daily-saved', { date: today, data })
+        console.log(`Daily data saved for ${today}`)
     }
 
     /**
@@ -380,7 +378,7 @@ export class StorageManager {
         a.click()
         window.URL.revokeObjectURL(url)
 
-        eventBus.emit('storage:exported', { format, filename: a.download })
+        console.log(`Data exported as ${format}: ${a.download}`)
     }
 
     /**
@@ -423,7 +421,7 @@ export class StorageManager {
         })
 
         localStorage.setItem(this.backupKey, JSON.stringify(trimmedBackups))
-        eventBus.emit('storage:backup-created', { id: backupId })
+        console.log(`Backup created with ID: ${backupId}`)
 
         return backupId
     }
@@ -455,7 +453,7 @@ export class StorageManager {
         }
 
         this.saveToStorage(backup.data)
-        eventBus.emit('storage:restored', { backupId, timestamp: backup.timestamp })
+        console.log(`Storage restored from backup: ${backupId}`)
     }
 
     /**
@@ -495,7 +493,7 @@ export class StorageManager {
         allData._meta.lastCleanup = new Date().toISOString()
 
         this.saveToStorage(allData)
-        eventBus.emit('storage:cleaned', { removedDays: dates.length - keepDates.length })
+        console.log(`Storage cleaned, removed ${dates.length - keepDates.length} old days`)
     }
 
     /**
@@ -504,7 +502,7 @@ export class StorageManager {
     resetStorage() {
         localStorage.removeItem(this.storageKey)
         localStorage.removeItem(this.backupKey)
-        eventBus.emit('storage:reset')
+        console.log('Storage reset completed')
     }
 
     /**

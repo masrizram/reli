@@ -3,12 +3,20 @@
  * Clean and optimized version with sidebar navigation and Supabase integration
  */
 
+// Core imports
 import { testConnection } from './config/supabase.js'
 import { databaseService } from './services/DatabaseService.js'
 import { analyticsService } from './services/AnalyticsService.js'
 import { optimizerService } from './services/OptimizerService.js'
 import { locationService } from './services/LocationService.js'
 import { Chart, registerables } from 'chart.js'
+
+// Layout and components
+import { createMainLayout, createPageContent } from './layouts/MainLayout.js'
+import { renderSidebar } from './components/Sidebar.js'
+import { renderDashboard } from './pages/Dashboard.js'
+
+// Utils
 import './utils/SampleDataGenerator.js'
 
 // Register Chart.js components
@@ -750,72 +758,11 @@ async function initializeCharts() {
     }
 }
 
-// Render functions
-function renderSidebar() {
-    return `
-        <!-- Sidebar -->
-        <div class="sidebar bg-base-100 shadow-xl w-60 fixed h-full z-30 lg:relative lg:translate-x-0 transform -translate-x-full transition-transform duration-300 ease-in-out" id="sidebar">
-            <div class="p-4">
-                <!-- Logo -->
-                <div class="flex items-center gap-3 mb-8">
-                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                        <span class="text-white text-xl">📊</span>
-                    </div>
-                    <div>
-                        <div class="font-bold text-lg">RELI</div>
-                        <div class="text-xs text-base-content/60">Driver Assistant</div>
-                    </div>
-                </div>
-
-                <!-- Navigation Menu -->
-                <nav class="space-y-2">
-                    <div class="sidebar-item ${currentView === 'dashboard' ? 'active' : ''}" 
-                         data-view="dashboard" onclick="navigateTo('dashboard')">
-                        <span class="text-xl">🏠</span>
-                        <span class="sidebar-text">Dashboard</span>
-                    </div>
-                    
-                    <div class="sidebar-item ${currentView === 'input' ? 'active' : ''}" 
-                         data-view="input" onclick="navigateTo('input')">
-                        <span class="text-xl">📝</span>
-                        <span class="sidebar-text">Input Data</span>
-                    </div>
-                    
-                    <div class="sidebar-item ${currentView === 'analytics' ? 'active' : ''}" 
-                         data-view="analytics" onclick="navigateTo('analytics')">
-                        <span class="text-xl">📊</span>
-                        <span class="sidebar-text">Analytics</span>
-                    </div>
-                    
-                    <div class="sidebar-item ${currentView === 'optimizer' ? 'active' : ''}" 
-                         data-view="optimizer" onclick="navigateTo('optimizer')">
-                        <span class="text-xl">🚀</span>
-                        <span class="sidebar-text">Optimizer</span>
-                    </div>
-                    
-                    <div class="sidebar-item ${currentView === 'location' ? 'active' : ''}" 
-                         data-view="location" onclick="navigateTo('location')">
-                        <span class="text-xl">📍</span>
-                        <span class="sidebar-text">Location</span>
-                    </div>
-                    
-                    <div class="sidebar-item ${currentView === 'settings' ? 'active' : ''}" 
-                         data-view="settings" onclick="navigateTo('settings')">
-                        <span class="text-xl">⚙️</span>
-                        <span class="sidebar-text">Settings</span>
-                    </div>
-                </nav>
-            </div>
-        </div>
-
-        <!-- Sidebar Overlay for Mobile -->
-        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden hidden" onclick="toggleSidebar()"></div>
-    `
-}
+// Clean render functions - moved to separate files
 
 function renderDashboard() {
     return `
-        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="flex-1">
+        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="min-height: 100vh">
             <!-- Mobile Header -->
             <div class="navbar bg-white shadow-sm border-b lg:hidden">
                 <div class="navbar-start">
@@ -1036,7 +983,7 @@ function renderDashboard() {
 
 function renderInputData() {
     return `
-        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="flex-1"
+        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="min-height: 100vh"
             <!-- Mobile Header -->
             <div class="navbar bg-white shadow-sm border-b lg:hidden">
                 <div class="navbar-start">
@@ -1440,7 +1387,7 @@ async function renderAnalytics() {
     const trend = trendResult.success ? trendResult.data : null
 
     return `
-        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="flex-1">
+        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="min-height: 100vh">
             <!-- Mobile Header -->
             <div class="navbar bg-white shadow-sm border-b lg:hidden">
                 <div class="navbar-start">
@@ -1705,7 +1652,7 @@ async function renderOptimizer() {
     const recommendations = hasData ? optimizationResult.data : null
 
     return `
-        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="flex-1">
+        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="min-height: 100vh">
             <!-- Mobile Header -->
             <div class="navbar bg-white shadow-sm border-b lg:hidden">
                 <div class="navbar-start">
@@ -2056,7 +2003,7 @@ async function renderLocation() {
         : []
 
     return `
-        <div class="bg-base-200" style="flex-1">
+        <div class="bg-base-200" style="min-height: 100vh">
             <!-- Mobile Header -->
             <div class="navbar bg-primary text-primary-content shadow-lg lg:hidden">
                 <div class="navbar-start">
@@ -2358,7 +2305,7 @@ async function renderLocation() {
 
 function renderSimpleView(title, icon, description) {
     return `
-        <div class="bg-base-200" style="flex-1">
+        <div class="bg-base-200" style="min-height: 100vh">
             <!-- Mobile Header -->
             <div class="navbar bg-primary text-primary-content shadow-lg lg:hidden">
                 <div class="navbar-start">
@@ -2397,40 +2344,38 @@ async function renderCurrentView() {
         return
     }
 
-    let content = ''
+    let pageContent = ''
 
-    // Add sidebar first
-    content += renderSidebar()
-
-    // Add main content area with proper layout
-    content += '<div class="flex-1 lg:ml-60">'
-
+    // Get the page content based on current view
     switch (currentView) {
         case 'dashboard':
-            content += renderDashboard()
+            pageContent = renderDashboard(isOnline, useDatabase)
             break
         case 'input':
-            content += renderInputData()
+            pageContent = renderInputData()
             break
         case 'analytics':
-            content += await renderAnalytics()
+            pageContent = await renderAnalytics()
             break
         case 'optimizer':
-            content += await renderOptimizer()
+            pageContent = await renderOptimizer()
             break
         case 'location':
-            content += await renderLocation()
+            pageContent = await renderLocation()
             break
         case 'settings':
-            content += renderSimpleView('Settings', '⚙️', 'Pengaturan tema, bahasa, dan preferensi aplikasi')
+            pageContent = renderSimpleView('Settings', '⚙️', 'Pengaturan tema, bahasa, dan preferensi aplikasi')
             break
         default:
-            content += renderDashboard()
+            pageContent = renderDashboard(isOnline, useDatabase)
     }
 
-    content += '</div>'
+    // Create the complete layout using the new structure
+    const sidebarContent = renderSidebar(currentView)
+    const mainContent = createPageContent(pageContent)
+    const fullLayout = createMainLayout(sidebarContent, mainContent)
 
-    appElement.innerHTML = content
+    appElement.innerHTML = fullLayout
     console.log(`✅ Rendered view: ${currentView}`)
 }
 
@@ -2498,7 +2443,7 @@ async function initApp() {
         const appElement = document.getElementById('app')
         if (appElement) {
             appElement.innerHTML = `
-                <div class="bg-base-200" style="flex-1 flex items-center justify-center p-4">
+                <div class="bg-base-200" style="min-height: 100vh flex items-center justify-center p-4">
                     <div class="card bg-base-100 shadow-xl max-w-md w-full">
                         <div class="card-body text-center">
                             <div class="text-6xl mb-4">❌</div>

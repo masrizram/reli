@@ -30,12 +30,35 @@ export class LocationService {
     }
 
     /**
-     * Get current location
+     * Get current location with fallback for development
      */
     async getCurrentLocation() {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
-                reject(new Error('Geolocation tidak didukung oleh browser ini'))
+                // Fallback for development - use Jakarta coordinates
+                console.warn('Geolocation not supported, using fallback location')
+                this.currentPosition = {
+                    latitude: -6.2088,
+                    longitude: 106.8456,
+                    accuracy: 100,
+                    timestamp: new Date().toISOString(),
+                    fallback: true
+                }
+                resolve(this.currentPosition)
+                return
+            }
+
+            // Check if we're on HTTP (not HTTPS) and provide fallback
+            if (location.protocol === 'http:' && location.hostname !== 'localhost') {
+                console.warn('Geolocation requires HTTPS, using fallback location')
+                this.currentPosition = {
+                    latitude: -6.2088,
+                    longitude: 106.8456,
+                    accuracy: 100,
+                    timestamp: new Date().toISOString(),
+                    fallback: true
+                }
+                resolve(this.currentPosition)
                 return
             }
 
@@ -46,23 +69,21 @@ export class LocationService {
                         longitude: position.coords.longitude,
                         accuracy: position.coords.accuracy,
                         timestamp: new Date().toISOString(),
+                        fallback: false
                     }
                     resolve(this.currentPosition)
                 },
                 error => {
-                    let errorMessage = 'Gagal mendapatkan lokasi'
-                    switch (error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorMessage = 'Akses lokasi ditolak oleh user'
-                            break
-                        case error.POSITION_UNAVAILABLE:
-                            errorMessage = 'Informasi lokasi tidak tersedia'
-                            break
-                        case error.TIMEOUT:
-                            errorMessage = 'Request lokasi timeout'
-                            break
+                    console.warn('Geolocation error, using fallback:', error)
+                    // Use fallback location instead of rejecting
+                    this.currentPosition = {
+                        latitude: -6.2088,
+                        longitude: 106.8456,
+                        accuracy: 100,
+                        timestamp: new Date().toISOString(),
+                        fallback: true
                     }
-                    reject(new Error(errorMessage))
+                    resolve(this.currentPosition)
                 },
                 {
                     enableHighAccuracy: true,
