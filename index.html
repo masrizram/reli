@@ -226,15 +226,9 @@
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             }
 
-            /* Professional Sidebar styles */
+            /* Clean Sidebar styles */
             .sidebar {
-                transition: all 0.3s ease;
-                width: 16rem;
-                position: fixed;
-                top: 0;
-                left: 0;
-                height: 100vh;
-                z-index: 30;
+                transition: transform 0.3s ease;
             }
 
             /* Sidebar overlay */
@@ -290,62 +284,15 @@
                 background-color: hsl(var(--p));
             }
 
-            /* Mobile sidebar */
+            /* Simplified responsive layout */
             @media (max-width: 1023px) {
                 .sidebar {
                     transform: translateX(-100%);
-                    z-index: 50;
                 }
-
-                .sidebar.sidebar-open {
+                
+                .sidebar.translate-x-0 {
                     transform: translateX(0);
                 }
-
-                #main-area {
-                    margin-left: 0 !important;
-                }
-
-                /* Mobile menu button */
-                #mobile-menu-btn {
-                    z-index: 60;
-                    position: relative;
-                }
-
-                .sidebar-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background-color: rgba(0, 0, 0, 0.5);
-                    z-index: 40;
-                    opacity: 0;
-                    visibility: hidden;
-                    transition:
-                        opacity 0.3s ease-in-out,
-                        visibility 0.3s ease-in-out;
-                }
-
-                .sidebar-overlay.show {
-                    opacity: 1;
-                    visibility: visible;
-                }
-            }
-
-            /* Desktop sidebar - Simplified */
-            @media (min-width: 1024px) {
-                .sidebar {
-                    transform: translateX(0);
-                }
-
-                #main-area {
-                    margin-left: 16rem;
-                }
-            }
-
-            /* Main content area adjustments */
-            .main-content-shifted {
-                margin-left: 4rem;
             }
 
             /* Professional card styles */
