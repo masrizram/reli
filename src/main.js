@@ -815,7 +815,7 @@ function renderSidebar() {
 
 function renderDashboard() {
     return `
-        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="min-height: 100vh"
+        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="min-height: 100vh">
             <!-- Mobile Header -->
             <div class="navbar bg-white shadow-sm border-b lg:hidden">
                 <div class="navbar-start">
@@ -2397,38 +2397,39 @@ async function renderCurrentView() {
         return
     }
 
-    let content = ''
+    let mainContent = ''
 
-    // Add sidebar
-    content += renderSidebar()
-
-    // Add main content area
-    content += '<div id="main-area" class="lg:ml-64">'
-
+    // Get the main content based on current view
     switch (currentView) {
         case 'dashboard':
-            content += renderDashboard()
+            mainContent = renderDashboard()
             break
         case 'input':
-            content += renderInputData()
+            mainContent = renderInputData()
             break
         case 'analytics':
-            content += await renderAnalytics()
+            mainContent = await renderAnalytics()
             break
         case 'optimizer':
-            content += await renderOptimizer()
+            mainContent = await renderOptimizer()
             break
         case 'location':
-            content += await renderLocation()
+            mainContent = await renderLocation()
             break
         case 'settings':
-            content += renderSimpleView('Settings', '⚙️', 'Pengaturan tema, bahasa, dan preferensi aplikasi')
+            mainContent = renderSimpleView('Settings', '⚙️', 'Pengaturan tema, bahasa, dan preferensi aplikasi')
             break
         default:
-            content += renderDashboard()
+            mainContent = renderDashboard()
     }
 
-    content += '</div>'
+    // Create the complete layout structure
+    const content = `
+        ${renderSidebar()}
+        <div id="main-area" class="lg:ml-64">
+            ${mainContent}
+        </div>
+    `
 
     appElement.innerHTML = content
     console.log(`✅ Rendered view: ${currentView}`)
