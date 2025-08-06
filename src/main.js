@@ -842,7 +842,7 @@ function renderDashboard() {
             </div>
 
             <!-- Main Content -->
-            <div class="container mx-auto px-4 py-6 max-w-7xl">
+            <div class="p-6">
                 <!-- Header Section -->
                 <div class="mb-8">
                     <div class="flex items-center gap-4 mb-6">
@@ -1060,7 +1060,7 @@ function renderInputData() {
             </div>
 
             <!-- Main Content -->
-            <div class="container mx-auto px-4 py-6 max-w-7xl">
+            <div class="p-6">
                 <!-- Header Section -->
                 <div class="mb-8">
                     <div class="flex items-center gap-4 mb-2">
@@ -1464,7 +1464,7 @@ async function renderAnalytics() {
             </div>
 
             <!-- Main Content -->
-            <div class="container mx-auto px-4 py-6 max-w-7xl">
+            <div class="p-6">
                 <!-- Header Section -->
                 <div class="mb-8">
                     <div class="flex items-center gap-4 mb-2">
@@ -1729,7 +1729,7 @@ async function renderOptimizer() {
             </div>
 
             <!-- Main Content -->
-            <div class="container mx-auto px-4 py-6 max-w-7xl">
+            <div class="p-6">
                 <!-- Header Section -->
                 <div class="mb-8">
                     <div class="flex items-center gap-4 mb-2">
@@ -2426,7 +2426,7 @@ async function renderCurrentView() {
     // Create the complete layout structure
     const content = `
         ${renderSidebar()}
-        <div id="main-area" class="lg:ml-64">
+        <div id="main-area" class="lg:ml-64" style="margin-top: 0; padding-top: 0;">
             ${mainContent}
         </div>
     `
