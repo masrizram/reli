@@ -41,13 +41,40 @@
 
         <!-- Tailwind CSS + DaisyUI -->
         <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
-        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.tailwindcss.com?plugins=typography,forms,aspect-ratio,container-queries"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {}
+                },
+                daisyui: {
+                    themes: ['light', 'dark', 'cupcake']
+                }
+            }
+        </script>
 
         <!-- Custom CSS -->
         <link href="/src/styles/sidebar.css" rel="stylesheet" type="text/css" />
         <link href="/src/styles/animations.css" rel="stylesheet" type="text/css" />
 
         <style>
+            /* CSS Reset for production */
+            * {
+                box-sizing: border-box;
+            }
+            
+            html, body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                overflow-x: hidden;
+            }
+            
+            #app {
+                min-height: 100vh;
+                position: relative;
+            }
+            
             .currency-input {
                 text-align: right;
             }
@@ -299,11 +326,30 @@
                 #main-area {
                     margin-left: 16rem;
                 }
+                
+                /* Ensure main content doesn't get pushed down */
+                .min-h-screen {
+                    min-height: 100vh;
+                    position: relative;
+                }
             }
 
             /* Main content area adjustments */
             .main-content-shifted {
                 margin-left: 4rem;
+            }
+            
+            /* Fix for content positioning */
+            #app {
+                position: relative;
+                z-index: 1;
+            }
+            
+            /* Prevent layout shifts */
+            body {
+                margin: 0;
+                padding: 0;
+                overflow-x: hidden;
             }
 
             /* Professional card styles */
@@ -591,22 +637,31 @@
                     loadingScreen.style.opacity = '0'
                     loadingScreen.style.transition = 'opacity 0.3s ease-out'
                     setTimeout(() => {
-                        loadingScreen.style.display = 'none'
+                        loadingScreen.remove()
                     }, 300)
+                }
+            }
+
+            // Ensure loading screen is hidden properly
+            let loadingHidden = false
+            function ensureLoadingHidden() {
+                if (!loadingHidden) {
+                    loadingHidden = true
+                    hideLoadingScreen()
                 }
             }
 
             // Multiple triggers to ensure loading screen is hidden
             document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(hideLoadingScreen, 1000)
+                setTimeout(ensureLoadingHidden, 800)
             })
 
             window.addEventListener('load', () => {
-                setTimeout(hideLoadingScreen, 500)
+                setTimeout(ensureLoadingHidden, 400)
             })
 
-            // Fallback: force hide after 2 seconds
-            setTimeout(hideLoadingScreen, 2000)
+            // Fallback: force hide after 1.5 seconds
+            setTimeout(ensureLoadingHidden, 1500)
 
             // Floating Action Button & Mobile Menu
             document.addEventListener('DOMContentLoaded', () => {

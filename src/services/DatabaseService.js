@@ -6,7 +6,6 @@
 import { supabase, TABLES } from '../config/supabase.js'
 
 export class DatabaseService {
-    
     /**
      * Save daily record to database
      * @param {Object} data - Daily record data
@@ -21,15 +20,11 @@ export class DatabaseService {
                 additional_costs: data.additionalCosts,
                 results: data.results,
                 created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
             }
 
             // Check if record exists
-            const { data: existing } = await supabase
-                .from(TABLES.DAILY_RECORDS)
-                .select('id')
-                .eq('date', date)
-                .single()
+            const { data: existing } = await supabase.from(TABLES.DAILY_RECORDS).select('id').eq('date', date).single()
 
             let result
             if (existing) {
@@ -38,14 +33,12 @@ export class DatabaseService {
                     .from(TABLES.DAILY_RECORDS)
                     .update({
                         ...record,
-                        updated_at: new Date().toISOString()
+                        updated_at: new Date().toISOString(),
                     })
                     .eq('date', date)
             } else {
                 // Insert new record
-                result = await supabase
-                    .from(TABLES.DAILY_RECORDS)
-                    .insert([record])
+                result = await supabase.from(TABLES.DAILY_RECORDS).insert([record])
             }
 
             if (result.error) {
@@ -54,7 +47,6 @@ export class DatabaseService {
 
             console.log('✅ Data saved to database:', date)
             return { success: true, data: result.data }
-
         } catch (error) {
             console.error('❌ Error saving to database:', error)
             return { success: false, error: error.message }
@@ -67,31 +59,27 @@ export class DatabaseService {
      */
     async loadDailyRecord(date) {
         try {
-            const { data, error } = await supabase
-                .from(TABLES.DAILY_RECORDS)
-                .select('*')
-                .eq('date', date)
-                .single()
+            const { data, error } = await supabase.from(TABLES.DAILY_RECORDS).select('*').eq('date', date).single()
 
-            if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+            if (error && error.code !== 'PGRST116') {
+                // PGRST116 = no rows returned
                 throw error
             }
 
             if (data) {
                 console.log('✅ Data loaded from database:', date)
-                return { 
-                    success: true, 
+                return {
+                    success: true,
                     data: {
                         platforms: data.platforms,
                         fuel: data.fuel,
                         additionalCosts: data.additional_costs,
-                        results: data.results
-                    }
+                        results: data.results,
+                    },
                 }
             } else {
                 return { success: false, error: 'No data found for this date' }
             }
-
         } catch (error) {
             console.error('❌ Error loading from database:', error)
             return { success: false, error: error.message }
@@ -116,7 +104,6 @@ export class DatabaseService {
 
             console.log(`✅ Loaded ${data.length} records from database`)
             return { success: true, data }
-
         } catch (error) {
             console.error('❌ Error loading records:', error)
             return { success: false, error: error.message }
@@ -129,10 +116,7 @@ export class DatabaseService {
      */
     async deleteDailyRecord(date) {
         try {
-            const { error } = await supabase
-                .from(TABLES.DAILY_RECORDS)
-                .delete()
-                .eq('date', date)
+            const { error } = await supabase.from(TABLES.DAILY_RECORDS).delete().eq('date', date)
 
             if (error) {
                 throw error
@@ -140,7 +124,6 @@ export class DatabaseService {
 
             console.log('✅ Record deleted from database:', date)
             return { success: true }
-
         } catch (error) {
             console.error('❌ Error deleting record:', error)
             return { success: false, error: error.message }
@@ -168,22 +151,21 @@ export class DatabaseService {
                 totalEarnings: data.reduce((sum, record) => sum + (record.results?.pendapatanBersih || 0), 0),
                 averageEarnings: 0,
                 bestDay: null,
-                worstDay: null
+                worstDay: null,
             }
 
             if (stats.totalDays > 0) {
                 stats.averageEarnings = stats.totalEarnings / stats.totalDays
-                
+
                 // Find best and worst days
-                const sortedByEarnings = data.sort((a, b) => 
-                    (b.results?.pendapatanBersih || 0) - (a.results?.pendapatanBersih || 0)
+                const sortedByEarnings = data.sort(
+                    (a, b) => (b.results?.pendapatanBersih || 0) - (a.results?.pendapatanBersih || 0)
                 )
                 stats.bestDay = sortedByEarnings[0]
                 stats.worstDay = sortedByEarnings[sortedByEarnings.length - 1]
             }
 
             return { success: true, data: stats }
-
         } catch (error) {
             console.error('❌ Error getting statistics:', error)
             return { success: false, error: error.message }
@@ -205,14 +187,13 @@ export class DatabaseService {
 
             const successCount = syncResults.filter(r => r.success).length
             console.log(`✅ Synced ${successCount}/${syncResults.length} records to database`)
-            
-            return { 
-                success: true, 
-                synced: successCount, 
-                total: syncResults.length,
-                results: syncResults
-            }
 
+            return {
+                success: true,
+                synced: successCount,
+                total: syncResults.length,
+                results: syncResults,
+            }
         } catch (error) {
             console.error('❌ Error syncing to database:', error)
             return { success: false, error: error.message }

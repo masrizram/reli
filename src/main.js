@@ -22,14 +22,14 @@ let appData = {
         grab: { topup: 0, sisa: 0, kotor: 0 },
         maxim: { topup: 0, sisa: 0, kotor: 0 },
         gojek: { topup: 0, sisa: 0, kotor: 0 },
-        indrive: { topup: 0, sisa: 0, kotor: 0 }
+        indrive: { topup: 0, sisa: 0, kotor: 0 },
     },
     fuel: {
         jarak: 0,
         konsumsi: 14,
         harga: 10000,
         literTerpakai: 0,
-        biayaBBM: 0
+        biayaBBM: 0,
     },
     additionalCosts: {
         parkir: 0,
@@ -37,14 +37,14 @@ let appData = {
         kuota: 0,
         tol: 0,
         lainnya: 0,
-        total: 0
+        total: 0,
     },
     results: {
         totalKotor: 0,
         biayaBBM: 0,
         totalAdditionalCosts: 0,
-        pendapatanBersih: 0
-    }
+        pendapatanBersih: 0,
+    },
 }
 
 let currentView = 'dashboard'
@@ -60,20 +60,20 @@ function formatCurrency(amount) {
 function showToast(message, type = 'info') {
     const toast = document.createElement('div')
     toast.className = 'toast toast-top toast-end z-50'
-    
+
     const alertTypes = {
         success: 'alert-success',
         error: 'alert-error',
         warning: 'alert-warning',
-        info: 'alert-info'
+        info: 'alert-info',
     }
-    
+
     toast.innerHTML = `
         <div class="alert ${alertTypes[type] || 'alert-info'}">
             <span>${message}</span>
         </div>
     `
-    
+
     document.body.appendChild(toast)
     setTimeout(() => {
         if (toast.parentElement) {
@@ -86,31 +86,32 @@ function showToast(message, type = 'info') {
 function calculateResults() {
     try {
         // Calculate platform totals
-        appData.results.totalKotor = Object.values(appData.platforms)
-            .reduce((sum, platform) => sum + (platform.kotor || 0), 0)
-        
+        appData.results.totalKotor = Object.values(appData.platforms).reduce(
+            (sum, platform) => sum + (platform.kotor || 0),
+            0
+        )
+
         // Calculate fuel costs
         if (appData.fuel.jarak > 0 && appData.fuel.konsumsi > 0) {
             appData.fuel.literTerpakai = appData.fuel.jarak / appData.fuel.konsumsi
             appData.fuel.biayaBBM = appData.fuel.literTerpakai * appData.fuel.harga
         }
-        
+
         appData.results.biayaBBM = Math.round(appData.fuel.biayaBBM || 0)
-        
+
         // Calculate additional costs total
         appData.additionalCosts.total = Object.entries(appData.additionalCosts)
             .filter(([key]) => key !== 'total')
             .reduce((sum, [, value]) => sum + (value || 0), 0)
-        
+
         appData.results.totalAdditionalCosts = appData.additionalCosts.total
-        
+
         // Calculate net earnings
-        appData.results.pendapatanBersih = appData.results.totalKotor - 
-            appData.results.biayaBBM - appData.results.totalAdditionalCosts
-        
+        appData.results.pendapatanBersih =
+            appData.results.totalKotor - appData.results.biayaBBM - appData.results.totalAdditionalCosts
+
         // Update UI
         updateStatsDisplay()
-        
     } catch (error) {
         console.error('Error calculating results:', error)
     }
@@ -122,9 +123,9 @@ function updateStatsDisplay() {
         'total-kotor': appData.results.totalKotor,
         'biaya-bbm': appData.results.biayaBBM,
         'biaya-tambahan': appData.results.totalAdditionalCosts,
-        'pendapatan-bersih': appData.results.pendapatanBersih
+        'pendapatan-bersih': appData.results.pendapatanBersih,
     }
-    
+
     Object.entries(elements).forEach(([id, value]) => {
         const element = document.getElementById(id)
         if (element) {
@@ -137,21 +138,21 @@ function updateStatsDisplay() {
 async function saveToStorage(date = null, showMessage = true) {
     try {
         const targetDate = date || new Date().toISOString().split('T')[0]
-        
+
         // Recalculate results before saving
         calculateResults()
-        
+
         // Save to localStorage first (offline backup)
         const localData = {
             [targetDate]: {
                 ...appData,
-                timestamp: new Date().toISOString()
-            }
+                timestamp: new Date().toISOString(),
+            },
         }
-        
+
         const existing = JSON.parse(localStorage.getItem('reli-data') || '{}')
-        localStorage.setItem('reli-data', JSON.stringify({...existing, ...localData}))
-        
+        localStorage.setItem('reli-data', JSON.stringify({ ...existing, ...localData }))
+
         // Save to database if online and database is enabled
         if (useDatabase && isOnline) {
             const dbResult = await databaseService.saveDailyRecord(appData, targetDate)
@@ -170,12 +171,11 @@ async function saveToStorage(date = null, showMessage = true) {
                 showToast(`Data ${targetDate} disimpan lokal`, 'success')
             }
         }
-        
+
         // Update UI immediately after saving
         if (currentView === 'input') {
             await renderCurrentView() // Re-render input page to show updated data
         }
-        
     } catch (error) {
         console.error('Error saving to storage:', error)
         if (showMessage) {
@@ -188,7 +188,7 @@ async function loadFromStorage(date = null, showMessage = false) {
     try {
         const targetDate = date || new Date().toISOString().split('T')[0]
         let dataLoaded = false
-        
+
         // Try to load from database first if online
         if (useDatabase && isOnline) {
             const dbResult = await databaseService.loadDailyRecord(targetDate)
@@ -203,7 +203,7 @@ async function loadFromStorage(date = null, showMessage = false) {
                 }
             }
         }
-        
+
         // Fallback to localStorage if database failed or offline
         if (!dataLoaded) {
             const localData = JSON.parse(localStorage.getItem('reli-data') || '{}')
@@ -219,7 +219,7 @@ async function loadFromStorage(date = null, showMessage = false) {
                 }
             }
         }
-        
+
         if (dataLoaded) {
             calculateResults()
         } else {
@@ -227,12 +227,11 @@ async function loadFromStorage(date = null, showMessage = false) {
                 showToast(`Tidak ada data untuk ${targetDate}`, 'warning')
             }
         }
-        
+
         // Update UI immediately after loading
         if (currentView === 'input') {
             await renderCurrentView() // Re-render input page to show loaded data
         }
-        
     } catch (error) {
         console.error('Error loading from storage:', error)
         if (showMessage) {
@@ -246,7 +245,7 @@ async function navigateTo(view) {
     currentView = view
     await renderCurrentView()
     updateSidebarActive()
-    
+
     // Initialize charts if we're on analytics page
     if (view === 'analytics') {
         setTimeout(initializeCharts, 100) // Small delay to ensure DOM is ready
@@ -267,10 +266,10 @@ function updateSidebarActive() {
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar')
     const overlay = document.querySelector('#sidebar-overlay')
-    
+
     if (sidebar && overlay) {
         const isOpen = sidebar.classList.contains('sidebar-open')
-        
+
         if (isOpen) {
             sidebar.classList.remove('sidebar-open')
             overlay.classList.remove('show')
@@ -286,16 +285,15 @@ function toggleSidebar() {
 // Update functions for input
 function updatePlatform(platform, field, value) {
     appData.platforms[platform][field] = parseFloat(value) || 0
-    
+
     // If user inputs kotor directly, use that value
     if (field === 'kotor') {
         appData.platforms[platform].kotor = parseFloat(value) || 0
     } else {
         // Otherwise calculate from topup - sisa
-        appData.platforms[platform].kotor = 
-            appData.platforms[platform].topup - appData.platforms[platform].sisa
+        appData.platforms[platform].kotor = appData.platforms[platform].topup - appData.platforms[platform].sisa
     }
-    
+
     calculateResults()
     updateInputPageResults() // Update results section in real-time
     autoSaveData() // Auto save if enabled
@@ -318,7 +316,7 @@ function updateAdditionalCost(field, value) {
 // Update only the results section in input page (for real-time updates)
 function updateInputPageResults() {
     if (currentView !== 'input') return
-    
+
     // Update platform totals
     Object.entries(appData.platforms).forEach(([platform, data]) => {
         const totalElement = document.querySelector(`[data-platform="${platform}"] .platform-total`)
@@ -326,7 +324,7 @@ function updateInputPageResults() {
             totalElement.textContent = `Total Kotor: Rp ${formatCurrency(data.kotor)}`
         }
     })
-    
+
     // Update fuel calculation display
     const fuelDisplay = document.querySelector('.fuel-calculation')
     if (fuelDisplay) {
@@ -343,28 +341,28 @@ function updateInputPageResults() {
             </div>
         `
     }
-    
+
     // Update additional costs total
     const additionalTotal = document.querySelector('.additional-costs-total')
     if (additionalTotal) {
         additionalTotal.textContent = `Total Biaya Tambahan: Rp ${formatCurrency(appData.additionalCosts.total)}`
     }
-    
+
     // Update all result cards
     const resultElements = {
         'result-total-kotor': appData.results.totalKotor,
         'result-biaya-bbm': appData.results.biayaBBM,
         'result-biaya-tambahan': appData.results.totalAdditionalCosts,
-        'result-pendapatan-bersih': appData.results.pendapatanBersih
+        'result-pendapatan-bersih': appData.results.pendapatanBersih,
     }
-    
+
     Object.entries(resultElements).forEach(([id, value]) => {
         const element = document.getElementById(id)
         if (element) {
             element.textContent = `Rp ${formatCurrency(value)}`
         }
     })
-    
+
     // Update breakdown calculation
     const breakdownCalc = document.querySelector('.breakdown-calculation')
     if (breakdownCalc) {
@@ -389,7 +387,7 @@ function updateInputPageResults() {
 function exportToWhatsApp() {
     const phoneNumber = prompt('Masukkan nomor WhatsApp (format: 628123456789):')
     if (!phoneNumber) return
-    
+
     const message = generateWhatsAppMessage()
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
     window.open(url, '_blank')
@@ -416,7 +414,10 @@ Tanggal: ${today}
 *Biaya BBM: Rp ${formatCurrency(appData.results.biayaBBM)}*
 
 *💸 BIAYA TAMBAHAN:*
-${Object.entries(appData.additionalCosts).filter(([key, value]) => key !== 'total' && value > 0).map(([key, value]) => `• ${key.charAt(0).toUpperCase() + key.slice(1)}: Rp ${formatCurrency(value)}`).join('\n')}
+${Object.entries(appData.additionalCosts)
+    .filter(([key, value]) => key !== 'total' && value > 0)
+    .map(([key, value]) => `• ${key.charAt(0).toUpperCase() + key.slice(1)}: Rp ${formatCurrency(value)}`)
+    .join('\n')}
 *Total Biaya Tambahan: Rp ${formatCurrency(appData.results.totalAdditionalCosts)}*
 
 *🧮 PERHITUNGAN:*
@@ -431,7 +432,7 @@ _Dibuat dengan RELI - Driver Assistant Pro_`
 async function exportToCSV() {
     try {
         let data = {}
-        
+
         // Try to get data from database first
         if (useDatabase && isOnline) {
             const dbResult = await databaseService.getAllDailyRecords()
@@ -439,19 +440,19 @@ async function exportToCSV() {
                 // Convert database format to local format
                 dbResult.data.forEach(record => {
                     data[record.date] = {
-                        results: record.results
+                        results: record.results,
                     }
                 })
             }
         }
-        
+
         // Fallback to localStorage if no database data
         if (Object.keys(data).length === 0) {
             data = JSON.parse(localStorage.getItem('reli-data') || '{}')
         }
-        
+
         const headers = ['Tanggal', 'Total Kotor', 'Biaya BBM', 'Biaya Tambahan', 'Pendapatan Bersih']
-        
+
         let csv = headers.join(',') + '\n'
         Object.entries(data).forEach(([date, dayData]) => {
             const row = [
@@ -459,11 +460,11 @@ async function exportToCSV() {
                 dayData.results?.totalKotor || 0,
                 dayData.results?.biayaBBM || 0,
                 dayData.results?.totalAdditionalCosts || 0,
-                dayData.results?.pendapatanBersih || 0
+                dayData.results?.pendapatanBersih || 0,
             ]
             csv += row.join(',') + '\n'
         })
-        
+
         const blob = new Blob([csv], { type: 'text/csv' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -484,11 +485,11 @@ async function syncToDatabase() {
         showToast('Database tidak tersedia', 'warning')
         return
     }
-    
+
     try {
         showToast('Memulai sinkronisasi...', 'info')
         const result = await databaseService.syncLocalStorageToDatabase()
-        
+
         if (result.success) {
             showToast(`Berhasil sync ${result.synced}/${result.total} data ke database`, 'success')
         } else {
@@ -511,7 +512,7 @@ function toggleAutoSave() {
     autoSave = !autoSave
     const status = autoSave ? 'aktif' : 'nonaktif'
     showToast(`Auto save ${status}`, 'info')
-    
+
     // Save current state to localStorage
     localStorage.setItem('reli-auto-save', autoSave.toString())
 }
@@ -519,7 +520,7 @@ function toggleAutoSave() {
 // Auto save function (called after each input change)
 async function autoSaveData() {
     if (!autoSave) return
-    
+
     const currentDate = document.getElementById('date-selector')?.value || new Date().toISOString().split('T')[0]
     await saveToStorage(currentDate, false) // Save without showing toast
 }
@@ -544,7 +545,7 @@ async function toggleLocationTracking() {
             await locationService.startTracking()
             showToast('Location tracking berhasil dimulai', 'success')
         }
-        
+
         // Refresh the location view if currently active
         if (currentView === 'location') {
             await renderCurrentView()
@@ -563,11 +564,14 @@ async function getCurrentLocation() {
             showToast('Akses lokasi ditolak. Silakan izinkan akses lokasi di pengaturan browser.', 'error')
             return
         }
-        
+
         showToast('Mendapatkan lokasi...', 'info')
         const position = await locationService.getCurrentLocation()
-        showToast(`Lokasi berhasil didapat: ${position.latitude.toFixed(4)}, ${position.longitude.toFixed(4)}`, 'success')
-        
+        showToast(
+            `Lokasi berhasil didapat: ${position.latitude.toFixed(4)}, ${position.longitude.toFixed(4)}`,
+            'success'
+        )
+
         // Refresh the location view if currently active
         if (currentView === 'location') {
             await renderCurrentView()
@@ -584,16 +588,16 @@ async function clearLocationHistory() {
         if (locationService.isTracking) {
             locationService.stopTracking()
         }
-        
+
         // Clear history
         locationService.locationHistory = []
         locationService.currentPosition = null
-        
+
         // Clear from localStorage
         localStorage.removeItem('reli-location-data')
-        
+
         showToast('Riwayat lokasi berhasil dihapus', 'success')
-        
+
         // Refresh the location view if currently active
         if (currentView === 'location') {
             await renderCurrentView()
@@ -610,15 +614,15 @@ async function initializeCharts() {
         // Get analytics data
         const dailyResult = await analyticsService.getDailyStats(14)
         const summaryResult = await analyticsService.getSummaryStats(30)
-        
+
         if (!dailyResult.success || !summaryResult.success) {
             console.warn('Failed to load analytics data for charts')
             return
         }
-        
+
         const dailyStats = dailyResult.data
         const summary = summaryResult.data
-        
+
         // Initialize earnings chart
         const earningsCanvas = document.getElementById('earningsChart')
         if (earningsCanvas) {
@@ -634,7 +638,7 @@ async function initializeCharts() {
                             backgroundColor: 'rgba(59, 130, 246, 0.1)',
                             borderWidth: 3,
                             fill: true,
-                            tension: 0.4
+                            tension: 0.4,
                         },
                         {
                             label: 'Total Kotor',
@@ -643,7 +647,7 @@ async function initializeCharts() {
                             backgroundColor: 'rgba(34, 197, 94, 0.1)',
                             borderWidth: 2,
                             fill: false,
-                            tension: 0.4
+                            tension: 0.4,
                         },
                         {
                             label: 'Biaya BBM',
@@ -652,9 +656,9 @@ async function initializeCharts() {
                             backgroundColor: 'rgba(251, 191, 36, 0.1)',
                             borderWidth: 2,
                             fill: false,
-                            tension: 0.4
-                        }
-                    ]
+                            tension: 0.4,
+                        },
+                    ],
                 },
                 options: {
                     responsive: true,
@@ -664,49 +668,50 @@ async function initializeCharts() {
                             position: 'top',
                         },
                         title: {
-                            display: false
-                        }
+                            display: false,
+                        },
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                callback: function(value) {
+                                callback: function (value) {
                                     return 'Rp ' + new Intl.NumberFormat('id-ID').format(value)
-                                }
-                            }
-                        }
+                                },
+                            },
+                        },
                     },
                     interaction: {
                         intersect: false,
-                        mode: 'index'
-                    }
-                }
+                        mode: 'index',
+                    },
+                },
             })
         }
-        
+
         // Initialize platform chart
         const platformCanvas = document.getElementById('platformChart')
         if (platformCanvas) {
-            const platformData = Object.entries(summary.platformBreakdown)
-                .filter(([platform, total]) => total > 0)
-            
+            const platformData = Object.entries(summary.platformBreakdown).filter(([platform, total]) => total > 0)
+
             if (platformData.length > 0) {
                 new Chart(platformCanvas, {
                     type: 'doughnut',
                     data: {
                         labels: platformData.map(([platform]) => platform.charAt(0).toUpperCase() + platform.slice(1)),
-                        datasets: [{
-                            data: platformData.map(([platform, total]) => total),
-                            backgroundColor: [
-                                'rgb(34, 197, 94)',   // Grab - Green
-                                'rgb(251, 146, 60)',  // Maxim - Orange
-                                'rgb(59, 130, 246)',  // Gojek - Blue
-                                'rgb(147, 51, 234)'   // Indrive - Purple
-                            ],
-                            borderWidth: 2,
-                            borderColor: '#ffffff'
-                        }]
+                        datasets: [
+                            {
+                                data: platformData.map(([platform, total]) => total),
+                                backgroundColor: [
+                                    'rgb(34, 197, 94)', // Grab - Green
+                                    'rgb(251, 146, 60)', // Maxim - Orange
+                                    'rgb(59, 130, 246)', // Gojek - Blue
+                                    'rgb(147, 51, 234)', // Indrive - Purple
+                                ],
+                                borderWidth: 2,
+                                borderColor: '#ffffff',
+                            },
+                        ],
                     },
                     options: {
                         responsive: true,
@@ -716,24 +721,30 @@ async function initializeCharts() {
                                 position: 'bottom',
                                 labels: {
                                     padding: 20,
-                                    usePointStyle: true
-                                }
+                                    usePointStyle: true,
+                                },
                             },
                             tooltip: {
                                 callbacks: {
-                                    label: function(context) {
+                                    label: function (context) {
                                         const total = context.dataset.data.reduce((a, b) => a + b, 0)
                                         const percentage = ((context.parsed / total) * 100).toFixed(1)
-                                        return context.label + ': Rp ' + new Intl.NumberFormat('id-ID').format(context.parsed) + ' (' + percentage + '%)'
-                                    }
-                                }
-                            }
-                        }
-                    }
+                                        return (
+                                            context.label +
+                                            ': Rp ' +
+                                            new Intl.NumberFormat('id-ID').format(context.parsed) +
+                                            ' (' +
+                                            percentage +
+                                            '%)'
+                                        )
+                                    },
+                                },
+                            },
+                        },
+                    },
                 })
             }
         }
-        
     } catch (error) {
         console.error('Error initializing charts:', error)
     }
@@ -1148,16 +1159,37 @@ function renderInputData() {
                     </div>
 
                     <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                        ${Object.entries(appData.platforms).map(([platform, data]) => {
-                            const platformColors = {
-                                grab: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', accent: 'bg-green-500' },
-                                maxim: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', accent: 'bg-orange-500' },
-                                gojek: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', accent: 'bg-blue-500' },
-                                indrive: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', accent: 'bg-purple-500' }
-                            }
-                            const colors = platformColors[platform] || platformColors.grab
-                            
-                            return `
+                        ${Object.entries(appData.platforms)
+                            .map(([platform, data]) => {
+                                const platformColors = {
+                                    grab: {
+                                        bg: 'bg-green-50',
+                                        border: 'border-green-200',
+                                        text: 'text-green-700',
+                                        accent: 'bg-green-500',
+                                    },
+                                    maxim: {
+                                        bg: 'bg-orange-50',
+                                        border: 'border-orange-200',
+                                        text: 'text-orange-700',
+                                        accent: 'bg-orange-500',
+                                    },
+                                    gojek: {
+                                        bg: 'bg-blue-50',
+                                        border: 'border-blue-200',
+                                        text: 'text-blue-700',
+                                        accent: 'bg-blue-500',
+                                    },
+                                    indrive: {
+                                        bg: 'bg-purple-50',
+                                        border: 'border-purple-200',
+                                        text: 'text-purple-700',
+                                        accent: 'bg-purple-500',
+                                    },
+                                }
+                                const colors = platformColors[platform] || platformColors.grab
+
+                                return `
                                 <div class="border ${colors.border} ${colors.bg} rounded-xl p-6" data-platform="${platform}">
                                     <div class="flex items-center gap-3 mb-4">
                                         <div class="w-8 h-8 ${colors.accent} rounded-lg flex items-center justify-center">
@@ -1207,7 +1239,8 @@ function renderInputData() {
                                     </div>
                                 </div>
                             `
-                        }).join('')}
+                            })
+                            .join('')}
                     </div>
                 </div>
 
@@ -1286,7 +1319,10 @@ function renderInputData() {
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                        ${Object.entries(appData.additionalCosts).filter(([key]) => key !== 'total').map(([key, value]) => `
+                        ${Object.entries(appData.additionalCosts)
+                            .filter(([key]) => key !== 'total')
+                            .map(
+                                ([key, value]) => `
                             <div class="form-control">
                                 <label class="label">
                                     <span class="label-text font-medium text-gray-700">${key.charAt(0).toUpperCase() + key.slice(1)}</span>
@@ -1298,7 +1334,9 @@ function renderInputData() {
                                        value="${value || ''}"
                                        onchange="updateAdditionalCost('${key}', this.value)">
                             </div>
-                        `).join('')}
+                        `
+                            )
+                            .join('')}
                     </div>
                     
                     <div class="bg-red-50 border border-red-200 rounded-xl p-4">
@@ -1396,11 +1434,11 @@ async function renderAnalytics() {
     const summaryResult = await analyticsService.getSummaryStats(30)
     const dailyResult = await analyticsService.getDailyStats(14)
     const trendResult = await analyticsService.getTrendAnalysis(14)
-    
+
     const summary = summaryResult.success ? summaryResult.data : null
     const dailyStats = dailyResult.success ? dailyResult.data : null
     const trend = trendResult.success ? trendResult.data : null
-    
+
     return `
         <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
             <!-- Mobile Header -->
@@ -1440,7 +1478,9 @@ async function renderAnalytics() {
                     </div>
                 </div>
 
-                ${!summary || summary.totalDays === 0 ? `
+                ${
+                    !summary || summary.totalDays === 0
+                        ? `
                     <!-- No Data State -->
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
                         <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -1455,7 +1495,8 @@ async function renderAnalytics() {
                             Input Data Sekarang
                         </button>
                     </div>
-                ` : `
+                `
+                        : `
                     <!-- Summary Stats -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         <div class="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-2xl p-6">
@@ -1553,13 +1594,17 @@ async function renderAnalytics() {
                                 </div>
                                 <h3 class="text-lg font-semibold text-green-800">Hari Terbaik</h3>
                             </div>
-                            ${summary.bestDay ? `
+                            ${
+                                summary.bestDay
+                                    ? `
                                 <div class="space-y-2">
                                     <div class="text-2xl font-bold text-green-700">Rp ${formatCurrency(summary.bestDay.earnings)}</div>
                                     <div class="text-sm text-green-600">${new Date(summary.bestDay.date).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
                                     <div class="text-xs text-green-600">Jarak: ${formatCurrency(summary.bestDay.distance)} km</div>
                                 </div>
-                            ` : '<div class="text-green-600">Belum ada data</div>'}
+                            `
+                                    : '<div class="text-green-600">Belum ada data</div>'
+                            }
                         </div>
                         
                         <div class="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-2xl p-6">
@@ -1569,13 +1614,17 @@ async function renderAnalytics() {
                                 </div>
                                 <h3 class="text-lg font-semibold text-red-800">Hari Terburuk</h3>
                             </div>
-                            ${summary.worstDay ? `
+                            ${
+                                summary.worstDay
+                                    ? `
                                 <div class="space-y-2">
                                     <div class="text-2xl font-bold text-red-700">Rp ${formatCurrency(summary.worstDay.earnings)}</div>
                                     <div class="text-sm text-red-600">${new Date(summary.worstDay.date).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
                                     <div class="text-xs text-red-600">Jarak: ${formatCurrency(summary.worstDay.distance)} km</div>
                                 </div>
-                            ` : '<div class="text-red-600">Belum ada data</div>'}
+                            `
+                                    : '<div class="text-red-600">Belum ada data</div>'
+                            }
                         </div>
                     </div>
 
@@ -1588,18 +1637,43 @@ async function renderAnalytics() {
                             <h3 class="text-lg font-semibold text-gray-800">Performa Platform</h3>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            ${Object.entries(summary.platformBreakdown).map(([platform, total]) => {
-                                const colors = {
-                                    grab: { bg: 'from-green-50 to-green-100', border: 'border-green-200', text: 'text-green-700', accent: 'bg-green-500' },
-                                    maxim: { bg: 'from-orange-50 to-orange-100', border: 'border-orange-200', text: 'text-orange-700', accent: 'bg-orange-500' },
-                                    gojek: { bg: 'from-blue-50 to-blue-100', border: 'border-blue-200', text: 'text-blue-700', accent: 'bg-blue-500' },
-                                    indrive: { bg: 'from-purple-50 to-purple-100', border: 'border-purple-200', text: 'text-purple-700', accent: 'bg-purple-500' }
-                                }
-                                const color = colors[platform]
-                                const totalPlatformEarnings = Object.values(summary.platformBreakdown).reduce((a, b) => a + b, 0)
-                                const percentage = totalPlatformEarnings > 0 ? (total / totalPlatformEarnings * 100) : 0
-                                
-                                return `
+                            ${Object.entries(summary.platformBreakdown)
+                                .map(([platform, total]) => {
+                                    const colors = {
+                                        grab: {
+                                            bg: 'from-green-50 to-green-100',
+                                            border: 'border-green-200',
+                                            text: 'text-green-700',
+                                            accent: 'bg-green-500',
+                                        },
+                                        maxim: {
+                                            bg: 'from-orange-50 to-orange-100',
+                                            border: 'border-orange-200',
+                                            text: 'text-orange-700',
+                                            accent: 'bg-orange-500',
+                                        },
+                                        gojek: {
+                                            bg: 'from-blue-50 to-blue-100',
+                                            border: 'border-blue-200',
+                                            text: 'text-blue-700',
+                                            accent: 'bg-blue-500',
+                                        },
+                                        indrive: {
+                                            bg: 'from-purple-50 to-purple-100',
+                                            border: 'border-purple-200',
+                                            text: 'text-purple-700',
+                                            accent: 'bg-purple-500',
+                                        },
+                                    }
+                                    const color = colors[platform]
+                                    const totalPlatformEarnings = Object.values(summary.platformBreakdown).reduce(
+                                        (a, b) => a + b,
+                                        0
+                                    )
+                                    const percentage =
+                                        totalPlatformEarnings > 0 ? (total / totalPlatformEarnings) * 100 : 0
+
+                                    return `
                                     <div class="bg-gradient-to-br ${color.bg} border ${color.border} rounded-xl p-4">
                                         <div class="flex items-center gap-3 mb-3">
                                             <div class="w-8 h-8 ${color.accent} rounded-lg flex items-center justify-center">
@@ -1611,10 +1685,12 @@ async function renderAnalytics() {
                                         <div class="text-xs ${color.text} opacity-75">${percentage.toFixed(1)}% dari total</div>
                                     </div>
                                 `
-                            }).join('')}
+                                })
+                                .join('')}
                         </div>
                     </div>
-                `}
+                `
+                }
             </div>
         </div>
     `
@@ -1624,10 +1700,10 @@ async function renderOptimizer() {
     // Load optimization recommendations
     const optimizationResult = await optimizerService.getOptimizationRecommendations()
     const quickTips = optimizerService.getQuickTips()
-    
+
     const hasData = optimizationResult.success
     const recommendations = hasData ? optimizationResult.data : null
-    
+
     return `
         <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
             <!-- Mobile Header -->
@@ -1667,7 +1743,9 @@ async function renderOptimizer() {
                     </div>
                 </div>
 
-                ${!hasData ? `
+                ${
+                    !hasData
+                        ? `
                     <!-- No Data State -->
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center mb-8">
                         <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -1682,7 +1760,8 @@ async function renderOptimizer() {
                             Input Data Sekarang
                         </button>
                     </div>
-                ` : `
+                `
+                        : `
                     <!-- Performance Score -->
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
                         <div class="flex items-center gap-3 mb-6">
@@ -1709,7 +1788,9 @@ async function renderOptimizer() {
                             
                             <!-- Score Breakdown -->
                             <div class="space-y-4">
-                                ${recommendations.overall.factors.map(factor => `
+                                ${recommendations.overall.factors
+                                    .map(
+                                        factor => `
                                     <div class="flex items-center justify-between">
                                         <div class="flex-1">
                                             <div class="flex justify-between items-center mb-1">
@@ -1721,7 +1802,9 @@ async function renderOptimizer() {
                                             </div>
                                         </div>
                                     </div>
-                                `).join('')}
+                                `
+                                    )
+                                    .join('')}
                             </div>
                         </div>
                     </div>
@@ -1729,7 +1812,9 @@ async function renderOptimizer() {
                     <!-- AI Recommendations -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                         <!-- Earnings Recommendations -->
-                        ${recommendations.earnings.length > 0 ? `
+                        ${
+                            recommendations.earnings.length > 0
+                                ? `
                             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                                 <div class="flex items-center gap-3 mb-6">
                                     <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -1738,7 +1823,9 @@ async function renderOptimizer() {
                                     <h3 class="text-lg font-semibold text-gray-800">Optimasi Pendapatan</h3>
                                 </div>
                                 <div class="space-y-4">
-                                    ${recommendations.earnings.map(rec => `
+                                    ${recommendations.earnings
+                                        .map(
+                                            rec => `
                                         <div class="border-l-4 border-${rec.type === 'success' ? 'green' : rec.type === 'warning' ? 'yellow' : 'blue'}-500 pl-4 py-2">
                                             <div class="flex items-start justify-between mb-2">
                                                 <h4 class="font-semibold text-gray-800">${rec.title}</h4>
@@ -1747,13 +1834,19 @@ async function renderOptimizer() {
                                             <p class="text-sm text-gray-600 mb-2">${rec.description}</p>
                                             <p class="text-sm text-gray-800 font-medium">${rec.action}</p>
                                         </div>
-                                    `).join('')}
+                                    `
+                                        )
+                                        .join('')}
                                 </div>
                             </div>
-                        ` : ''}
+                        `
+                                : ''
+                        }
 
                         <!-- Platform Recommendations -->
-                        ${recommendations.platform.length > 0 ? `
+                        ${
+                            recommendations.platform.length > 0
+                                ? `
                             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                                 <div class="flex items-center gap-3 mb-6">
                                     <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -1762,7 +1855,9 @@ async function renderOptimizer() {
                                     <h3 class="text-lg font-semibold text-gray-800">Strategi Platform</h3>
                                 </div>
                                 <div class="space-y-4">
-                                    ${recommendations.platform.map(rec => `
+                                    ${recommendations.platform
+                                        .map(
+                                            rec => `
                                         <div class="border-l-4 border-${rec.type === 'success' ? 'green' : rec.type === 'warning' ? 'yellow' : 'blue'}-500 pl-4 py-2">
                                             <div class="flex items-start justify-between mb-2">
                                                 <h4 class="font-semibold text-gray-800">${rec.title}</h4>
@@ -1771,16 +1866,22 @@ async function renderOptimizer() {
                                             <p class="text-sm text-gray-600 mb-2">${rec.description}</p>
                                             <p class="text-sm text-gray-800 font-medium">${rec.action}</p>
                                         </div>
-                                    `).join('')}
+                                    `
+                                        )
+                                        .join('')}
                                 </div>
                             </div>
-                        ` : ''}
+                        `
+                                : ''
+                        }
                     </div>
 
                     <!-- Fuel & Cost Optimization -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                         <!-- Fuel Recommendations -->
-                        ${recommendations.fuel.length > 0 ? `
+                        ${
+                            recommendations.fuel.length > 0
+                                ? `
                             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                                 <div class="flex items-center gap-3 mb-6">
                                     <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -1789,7 +1890,9 @@ async function renderOptimizer() {
                                     <h3 class="text-lg font-semibold text-gray-800">Efisiensi BBM</h3>
                                 </div>
                                 <div class="space-y-4">
-                                    ${recommendations.fuel.map(rec => `
+                                    ${recommendations.fuel
+                                        .map(
+                                            rec => `
                                         <div class="border-l-4 border-${rec.type === 'success' ? 'green' : rec.type === 'warning' ? 'yellow' : 'blue'}-500 pl-4 py-2">
                                             <div class="flex items-start justify-between mb-2">
                                                 <h4 class="font-semibold text-gray-800">${rec.title}</h4>
@@ -1798,13 +1901,19 @@ async function renderOptimizer() {
                                             <p class="text-sm text-gray-600 mb-2">${rec.description}</p>
                                             <p class="text-sm text-gray-800 font-medium">${rec.action}</p>
                                         </div>
-                                    `).join('')}
+                                    `
+                                        )
+                                        .join('')}
                                 </div>
                             </div>
-                        ` : ''}
+                        `
+                                : ''
+                        }
 
                         <!-- Cost Recommendations -->
-                        ${recommendations.cost.length > 0 ? `
+                        ${
+                            recommendations.cost.length > 0
+                                ? `
                             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                                 <div class="flex items-center gap-3 mb-6">
                                     <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
@@ -1813,7 +1922,9 @@ async function renderOptimizer() {
                                     <h3 class="text-lg font-semibold text-gray-800">Manajemen Biaya</h3>
                                 </div>
                                 <div class="space-y-4">
-                                    ${recommendations.cost.map(rec => `
+                                    ${recommendations.cost
+                                        .map(
+                                            rec => `
                                         <div class="border-l-4 border-${rec.type === 'success' ? 'green' : rec.type === 'warning' ? 'yellow' : 'blue'}-500 pl-4 py-2">
                                             <div class="flex items-start justify-between mb-2">
                                                 <h4 class="font-semibold text-gray-800">${rec.title}</h4>
@@ -1822,14 +1933,20 @@ async function renderOptimizer() {
                                             <p class="text-sm text-gray-600 mb-2">${rec.description}</p>
                                             <p class="text-sm text-gray-800 font-medium">${rec.action}</p>
                                         </div>
-                                    `).join('')}
+                                    `
+                                        )
+                                        .join('')}
                                 </div>
                             </div>
-                        ` : ''}
+                        `
+                                : ''
+                        }
                     </div>
 
                     <!-- Time Optimization -->
-                    ${recommendations.time.length > 0 ? `
+                    ${
+                        recommendations.time.length > 0
+                            ? `
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
                             <div class="flex items-center gap-3 mb-6">
                                 <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -1838,7 +1955,9 @@ async function renderOptimizer() {
                                 <h3 class="text-lg font-semibold text-gray-800">Optimasi Waktu</h3>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                ${recommendations.time.map(rec => `
+                                ${recommendations.time
+                                    .map(
+                                        rec => `
                                     <div class="border-l-4 border-${rec.type === 'success' ? 'green' : rec.type === 'warning' ? 'yellow' : 'blue'}-500 pl-4 py-2">
                                         <div class="flex items-start justify-between mb-2">
                                             <h4 class="font-semibold text-gray-800">${rec.title}</h4>
@@ -1847,11 +1966,16 @@ async function renderOptimizer() {
                                         <p class="text-sm text-gray-600 mb-2">${rec.description}</p>
                                         <p class="text-sm text-gray-800 font-medium">${rec.action}</p>
                                     </div>
-                                `).join('')}
+                                `
+                                    )
+                                    .join('')}
                             </div>
                         </div>
-                    ` : ''}
-                `}
+                    `
+                            : ''
+                    }
+                `
+                }
 
                 <!-- Quick Tips -->
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -1862,7 +1986,9 @@ async function renderOptimizer() {
                         <h3 class="text-lg font-semibold text-gray-800">Tips Cepat Optimasi</h3>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        ${quickTips.map(tip => `
+                        ${quickTips
+                            .map(
+                                tip => `
                             <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all">
                                 <div class="flex items-center gap-3 mb-3">
                                     <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
@@ -1872,7 +1998,9 @@ async function renderOptimizer() {
                                 </div>
                                 <p class="text-sm text-gray-600">${tip.tip}</p>
                             </div>
-                        `).join('')}
+                        `
+                            )
+                            .join('')}
                     </div>
                 </div>
 
@@ -1891,14 +2019,18 @@ async function renderOptimizer() {
                             </svg>
                             Input Data Baru
                         </button>
-                        ${hasData ? `
+                        ${
+                            hasData
+                                ? `
                             <button class="btn btn-accent btn-lg gap-2" onclick="refreshOptimizer()">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                 </svg>
                                 Refresh Rekomendasi
                             </button>
-                        ` : ''}
+                        `
+                                : ''
+                        }
                     </div>
                 </div>
             </div>
@@ -1912,15 +2044,17 @@ async function renderLocation() {
     const analytics = locationService.getLocationAnalytics()
     const currentPosition = locationService.currentPosition
     const isTracking = locationService.isTracking
-    
+
     // Get area recommendations
-    const recommendations = currentPosition ? 
-        locationService.getAreaRecommendations(currentPosition.latitude, currentPosition.longitude) : []
-    
+    const recommendations = currentPosition
+        ? locationService.getAreaRecommendations(currentPosition.latitude, currentPosition.longitude)
+        : []
+
     // Get nearby hotspots
-    const nearbyHotspots = currentPosition ? 
-        locationService.findNearbyHotspots(currentPosition.latitude, currentPosition.longitude, 10) : []
-    
+    const nearbyHotspots = currentPosition
+        ? locationService.findNearbyHotspots(currentPosition.latitude, currentPosition.longitude, 10)
+        : []
+
     return `
         <div class="min-h-screen bg-base-200">
             <!-- Mobile Header -->
@@ -1955,15 +2089,17 @@ async function renderLocation() {
                                 <div class="bg-white/70 rounded-lg p-4">
                                     <div class="text-sm text-blue-600 font-medium mb-1">Lokasi Saat Ini</div>
                                     <div class="text-lg font-bold text-blue-800">
-                                        ${currentPosition ? 
-                                            `${currentPosition.latitude.toFixed(6)}, ${currentPosition.longitude.toFixed(6)}` : 
-                                            'Belum dideteksi'
+                                        ${
+                                            currentPosition
+                                                ? `${currentPosition.latitude.toFixed(6)}, ${currentPosition.longitude.toFixed(6)}`
+                                                : 'Belum dideteksi'
                                         }
                                     </div>
                                     <div class="text-xs text-blue-500 mt-1">
-                                        ${currentPosition ? 
-                                            `Akurasi: ${currentPosition.accuracy?.toFixed(0) || 'N/A'} meter` : 
-                                            'Klik "Dapatkan Lokasi" atau "Mulai Tracking"'
+                                        ${
+                                            currentPosition
+                                                ? `Akurasi: ${currentPosition.accuracy?.toFixed(0) || 'N/A'} meter`
+                                                : 'Klik "Dapatkan Lokasi" atau "Mulai Tracking"'
                                         }
                                     </div>
                                 </div>
@@ -1992,7 +2128,9 @@ async function renderLocation() {
                                 </button>
                             </div>
                             
-                            ${!currentPosition && !isTracking ? `
+                            ${
+                                !currentPosition && !isTracking
+                                    ? `
                                 <div class="alert alert-info">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     <span class="text-sm">
@@ -2000,7 +2138,9 @@ async function renderLocation() {
                                         Pastikan untuk mengizinkan agar fitur tracking dapat berfungsi.
                                     </span>
                                 </div>
-                            ` : ''}
+                            `
+                                    : ''
+                            }
                         </div>
                     </div>
                     
@@ -2011,9 +2151,13 @@ async function renderLocation() {
                                 🗺️ Optimasi Rute
                             </h2>
                             
-                            ${currentPosition ? `
+                            ${
+                                currentPosition
+                                    ? `
                                 <div class="space-y-4">
-                                    ${recommendations.map(rec => `
+                                    ${recommendations
+                                        .map(
+                                            rec => `
                                         <div class="bg-white/70 rounded-lg p-4 border-l-4 border-green-500">
                                             <div class="flex items-center justify-between mb-2">
                                                 <h3 class="font-bold text-green-800">${rec.time}</h3>
@@ -2023,14 +2167,21 @@ async function renderLocation() {
                                             </div>
                                             <p class="text-sm text-green-700 mb-2">${rec.reason}</p>
                                             <div class="flex flex-wrap gap-2">
-                                                ${rec.areas.map(area => `
+                                                ${rec.areas
+                                                    .map(
+                                                        area => `
                                                     <span class="badge badge-success badge-sm">${area}</span>
-                                                `).join('')}
+                                                `
+                                                    )
+                                                    .join('')}
                                             </div>
                                         </div>
-                                    `).join('')}
+                                    `
+                                        )
+                                        .join('')}
                                 </div>
-                            ` : `
+                            `
+                                    : `
                                 <div class="text-center py-8">
                                     <div class="text-6xl mb-4">📍</div>
                                     <p class="text-green-600 mb-4">Aktifkan tracking lokasi untuk mendapatkan rekomendasi rute</p>
@@ -2038,7 +2189,8 @@ async function renderLocation() {
                                         📍 Dapatkan Lokasi
                                     </button>
                                 </div>
-                            `}
+                            `
+                            }
                         </div>
                     </div>
                     
@@ -2049,31 +2201,38 @@ async function renderLocation() {
                                 🔥 Hotspot Terdekat
                             </h2>
                             
-                            ${nearbyHotspots.length > 0 ? `
+                            ${
+                                nearbyHotspots.length > 0
+                                    ? `
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    ${nearbyHotspots.slice(0, 6).map(hotspot => {
-                                        const distance = currentPosition ? 
-                                            locationService.calculateDistance(
-                                                currentPosition.latitude, currentPosition.longitude,
-                                                hotspot.latitude, hotspot.longitude
-                                            ) : 0
-                                        
-                                        const typeIcons = {
-                                            'office': '🏢',
-                                            'mall': '🏬',
-                                            'transport': '🚉',
-                                            'residential': '🏠',
-                                            'entertainment': '🎭',
-                                            'restaurant': '🍽️'
-                                        }
-                                        
-                                        const demandColors = {
-                                            'high': 'border-red-500 bg-red-50',
-                                            'medium': 'border-yellow-500 bg-yellow-50',
-                                            'low': 'border-green-500 bg-green-50'
-                                        }
-                                        
-                                        return `
+                                    ${nearbyHotspots
+                                        .slice(0, 6)
+                                        .map(hotspot => {
+                                            const distance = currentPosition
+                                                ? locationService.calculateDistance(
+                                                      currentPosition.latitude,
+                                                      currentPosition.longitude,
+                                                      hotspot.latitude,
+                                                      hotspot.longitude
+                                                  )
+                                                : 0
+
+                                            const typeIcons = {
+                                                office: '🏢',
+                                                mall: '🏬',
+                                                transport: '🚉',
+                                                residential: '🏠',
+                                                entertainment: '🎭',
+                                                restaurant: '🍽️',
+                                            }
+
+                                            const demandColors = {
+                                                high: 'border-red-500 bg-red-50',
+                                                medium: 'border-yellow-500 bg-yellow-50',
+                                                low: 'border-green-500 bg-green-50',
+                                            }
+
+                                            return `
                                             <div class="bg-white/70 rounded-lg p-4 border-l-4 ${demandColors[hotspot.demand]}">
                                                 <div class="flex items-center justify-between mb-2">
                                                     <div class="flex items-center gap-2">
@@ -2088,33 +2247,50 @@ async function renderLocation() {
                                                     📍 ${distance.toFixed(1)} km dari lokasi Anda
                                                 </div>
                                                 <div class="text-xs text-purple-500 mt-1">
-                                                    ${hotspot.type === 'office' ? 'Area Perkantoran' :
-                                                      hotspot.type === 'mall' ? 'Pusat Perbelanjaan' :
-                                                      hotspot.type === 'transport' ? 'Transportasi' :
-                                                      hotspot.type === 'residential' ? 'Area Residential' :
-                                                      hotspot.type === 'entertainment' ? 'Hiburan' :
-                                                      hotspot.type === 'restaurant' ? 'Area Kuliner' : 'Lainnya'}
+                                                    ${
+                                                        hotspot.type === 'office'
+                                                            ? 'Area Perkantoran'
+                                                            : hotspot.type === 'mall'
+                                                              ? 'Pusat Perbelanjaan'
+                                                              : hotspot.type === 'transport'
+                                                                ? 'Transportasi'
+                                                                : hotspot.type === 'residential'
+                                                                  ? 'Area Residential'
+                                                                  : hotspot.type === 'entertainment'
+                                                                    ? 'Hiburan'
+                                                                    : hotspot.type === 'restaurant'
+                                                                      ? 'Area Kuliner'
+                                                                      : 'Lainnya'
+                                                    }
                                                 </div>
                                             </div>
                                         `
-                                    }).join('')}
+                                        })
+                                        .join('')}
                                 </div>
-                            ` : `
+                            `
+                                    : `
                                 <div class="text-center py-8">
                                     <div class="text-6xl mb-4">🔍</div>
                                     <p class="text-purple-600 mb-4">
-                                        ${currentPosition ? 
-                                            'Tidak ada hotspot dalam radius 10 km' : 
-                                            'Aktifkan tracking lokasi untuk melihat hotspot terdekat'
+                                        ${
+                                            currentPosition
+                                                ? 'Tidak ada hotspot dalam radius 10 km'
+                                                : 'Aktifkan tracking lokasi untuk melihat hotspot terdekat'
                                         }
                                     </p>
-                                    ${!currentPosition ? `
+                                    ${
+                                        !currentPosition
+                                            ? `
                                         <button class="btn btn-primary" onclick="getCurrentLocation()">
                                             📍 Dapatkan Lokasi
                                         </button>
-                                    ` : ''}
+                                    `
+                                            : ''
+                                    }
                                 </div>
-                            `}
+                            `
+                            }
                         </div>
                     </div>
                     
@@ -2143,15 +2319,19 @@ async function renderLocation() {
                                 
                                 <div class="bg-white/70 rounded-lg p-4 text-center">
                                     <div class="text-2xl font-bold text-orange-800">
-                                        ${analytics.trackingDuration > 0 ? 
-                                            Math.round(analytics.trackingDuration / (1000 * 60)) : 0
+                                        ${
+                                            analytics.trackingDuration > 0
+                                                ? Math.round(analytics.trackingDuration / (1000 * 60))
+                                                : 0
                                         }
                                     </div>
                                     <div class="text-sm text-orange-600">Durasi (menit)</div>
                                 </div>
                             </div>
                             
-                            ${analytics.totalLocations > 0 ? `
+                            ${
+                                analytics.totalLocations > 0
+                                    ? `
                                 <div class="mt-6 bg-white/70 rounded-lg p-4">
                                     <h3 class="font-bold text-orange-800 mb-2">Riwayat Tracking Terakhir</h3>
                                     <div class="text-sm text-orange-700">
@@ -2161,11 +2341,13 @@ async function renderLocation() {
                                         <div>• Durasi tracking: ${Math.round(analytics.trackingDuration / (1000 * 60))} menit</div>
                                     </div>
                                 </div>
-                            ` : `
+                            `
+                                    : `
                                 <div class="mt-6 text-center py-4">
                                     <p class="text-orange-600">Belum ada data tracking. Mulai tracking untuk melihat analisis.</p>
                                 </div>
-                            `}
+                            `
+                            }
                         </div>
                     </div>
                 </div>
@@ -2216,13 +2398,13 @@ async function renderCurrentView() {
     }
 
     let content = ''
-    
+
     // Add sidebar
     content += renderSidebar()
-    
+
     // Add main content area
     content += '<div id="main-area" class="lg:ml-64">'
-    
+
     switch (currentView) {
         case 'dashboard':
             content += renderDashboard()
@@ -2245,9 +2427,9 @@ async function renderCurrentView() {
         default:
             content += renderDashboard()
     }
-    
+
     content += '</div>'
-    
+
     appElement.innerHTML = content
     console.log(`✅ Rendered view: ${currentView}`)
 }
@@ -2256,15 +2438,15 @@ async function renderCurrentView() {
 async function initApp() {
     try {
         console.log('🚀 Initializing RELI Application...')
-        
+
         const appElement = document.getElementById('app')
         if (!appElement) {
             console.error('❌ App element not found!')
             return
         }
-        
+
         console.log('✅ App element found')
-        
+
         // Test database connection
         if (useDatabase && isOnline) {
             console.log('🔍 Testing database connection...')
@@ -2274,23 +2456,23 @@ async function initApp() {
                 useDatabase = false
             }
         }
-        
+
         // Load auto save preference
         const savedAutoSave = localStorage.getItem('reli-auto-save')
         if (savedAutoSave !== null) {
             autoSave = savedAutoSave === 'true'
         }
-        
+
         // Load saved data (without showing toast on first load)
         await loadFromStorage()
-        
+
         // Initialize location service
         console.log('📍 Initializing location service...')
         await locationService.loadLocationHistory()
-        
+
         // Render initial view
         await renderCurrentView()
-        
+
         // Hide loading screen
         const loadingScreen = document.getElementById('loading-screen')
         if (loadingScreen) {
@@ -2299,20 +2481,19 @@ async function initApp() {
                 loadingScreen.style.display = 'none'
             }, 300)
         }
-        
+
         console.log('✅ RELI Application initialized successfully')
         const dbStatus = useDatabase ? 'dengan database' : 'mode offline'
         showToast(`RELI berhasil dimuat ${dbStatus}!`, 'success')
-        
     } catch (error) {
         console.error('❌ Failed to initialize:', error)
-        
+
         // Hide loading screen even on error
         const loadingScreen = document.getElementById('loading-screen')
         if (loadingScreen) {
             loadingScreen.style.display = 'none'
         }
-        
+
         // Show error message
         const appElement = document.getElementById('app')
         if (appElement) {
@@ -2348,10 +2529,10 @@ window.addEventListener('offline', () => {
 })
 
 // Location event listeners
-window.addEventListener('locationUpdate', (event) => {
+window.addEventListener('locationUpdate', event => {
     const locationData = event.detail
     console.log('Location updated:', locationData)
-    
+
     // Auto-refresh location view if active
     if (currentView === 'location') {
         // Debounce the refresh to avoid too many updates
@@ -2362,11 +2543,11 @@ window.addEventListener('locationUpdate', (event) => {
     }
 })
 
-window.addEventListener('locationError', (event) => {
+window.addEventListener('locationError', event => {
     const error = event.detail
     console.error('Location error:', error)
     showToast(error.message || 'Error tracking lokasi', 'error')
-    
+
     // Refresh location view to update tracking status
     if (currentView === 'location') {
         setTimeout(async () => {
