@@ -43,8 +43,9 @@
         <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
         <script src="https://cdn.tailwindcss.com"></script>
 
-        <!-- Custom Sidebar CSS -->
+        <!-- Custom CSS -->
         <link href="/src/styles/sidebar.css" rel="stylesheet" type="text/css" />
+        <link href="/src/styles/animations.css" rel="stylesheet" type="text/css" />
 
         <style>
             .currency-input {
@@ -524,7 +525,7 @@
 
             // PWA Install Prompt
             let deferredPrompt
-            window.addEventListener('beforeinstallprompt', (e) => {
+            window.addEventListener('beforeinstallprompt', e => {
                 e.preventDefault()
                 deferredPrompt = e
                 showInstallPrompt()
@@ -613,7 +614,7 @@
                 setTimeout(() => {
                     const fab = document.getElementById('fab-menu')
                     if (fab) {
-                        fab.addEventListener('click', (e) => {
+                        fab.addEventListener('click', e => {
                             e.preventDefault()
                             e.stopPropagation()
 
@@ -639,8 +640,6 @@
                 }, 1000)
             })
 
-            })
-
             // Performance monitoring
             window.addEventListener('load', () => {
                 if ('performance' in window) {
@@ -650,13 +649,15 @@
             })
 
             // Error handling
-            window.addEventListener('error', (event) => {
+            window.addEventListener('error', event => {
                 // Filter out common development errors
                 if (event.error && event.error.message) {
                     const message = event.error.message.toLowerCase()
-                    if (message.includes('websocket') ||
+                    if (
+                        message.includes('websocket') ||
                         message.includes('failed to fetch') ||
-                        message.includes('network error')) {
+                        message.includes('network error')
+                    ) {
                         console.warn('Development network error (can be ignored):', event.error.message)
                         return
                     }
@@ -664,13 +665,15 @@
                 console.error('❌ Global error:', event.error)
             })
 
-            window.addEventListener('unhandledrejection', (event) => {
+            window.addEventListener('unhandledrejection', event => {
                 // Filter out common development promise rejections
                 if (event.reason && typeof event.reason === 'string') {
                     const reason = event.reason.toLowerCase()
-                    if (reason.includes('websocket') ||
+                    if (
+                        reason.includes('websocket') ||
                         reason.includes('failed to fetch') ||
-                        reason.includes('network error')) {
+                        reason.includes('network error')
+                    ) {
                         console.warn('Development promise rejection (can be ignored):', event.reason)
                         event.preventDefault()
                         return
@@ -681,7 +684,7 @@
             })
 
             // Keyboard shortcuts
-            document.addEventListener('keydown', (e) => {
+            document.addEventListener('keydown', e => {
                 // Ctrl/Cmd + S = Save/Calculate
                 if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                     e.preventDefault()
