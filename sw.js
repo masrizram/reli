@@ -4,7 +4,7 @@ console.error = () => {}
 console.warn = () => {}
 console.info = () => {}
 
-const CACHE_NAME = 'reli-v4'
+const CACHE_NAME = 'reli-v5'
 
 self.addEventListener('install', event => {
     event.waitUntil(
