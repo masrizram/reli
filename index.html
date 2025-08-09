@@ -66,8 +66,15 @@
                 const message = args.join(' ').toLowerCase()
                 if (
                     message.includes('permission policy') ||
+                    message.includes('permissions-policy') ||
                     message.includes('browsing-topics') ||
                     message.includes('unrecognized feature') ||
+                    message.includes('interest-cohort') ||
+                    message.includes('run-ad-auction') ||
+                    message.includes('join-ad-interest-group') ||
+                    message.includes('private-state-token') ||
+                    message.includes('private-aggregation') ||
+                    message.includes('attribution-reporting') ||
                     message.includes('failed to load resource') ||
                     message.includes('404')
                 ) {

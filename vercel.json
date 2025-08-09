@@ -2,13 +2,18 @@
     "buildCommand": "npm run build",
     "outputDirectory": "dist",
     "framework": "vite",
+    "git": {
+        "deploymentEnabled": {
+            "main": true
+        }
+    },
     "headers": [
         {
             "source": "/(.*)",
             "headers": [
                 {
                     "key": "Permissions-Policy",
-                    "value": "geolocation=*, camera=*, microphone=*, payment=*, usb=*, interest-cohort=()"
+                    "value": "geolocation=*, camera=*, microphone=*, payment=*, usb=*"
                 },
                 {
                     "key": "X-Content-Type-Options",
