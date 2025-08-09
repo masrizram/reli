@@ -1,67 +1,42 @@
-const CACHE_NAME = 'reli-v3'
-const urlsToCache = ['/']
+// Suppress ALL console messages in service worker
+console.log = () => {}
+console.error = () => {}
+console.warn = () => {}
+console.info = () => {}
+
+const CACHE_NAME = 'reli-v4'
 
 self.addEventListener('install', event => {
     event.waitUntil(
+        Promise.resolve()
+            .then(() => self.skipWaiting())
+            .catch(() => self.skipWaiting())
+    )
+})
+
+self.addEventListener('activate', event => {
+    event.waitUntil(
         caches
-            .open(CACHE_NAME)
-            .then(cache => {
-                // Try to cache files individually to avoid batch failures
-                return Promise.allSettled(
-                    urlsToCache.map(url =>
-                        cache.add(url).catch(err => {
-                            // Silently ignore individual cache failures
-                            return null
-                        })
-                    )
+            .keys()
+            .then(cacheNames => {
+                return Promise.all(
+                    cacheNames.map(cacheName => {
+                        if (cacheName !== CACHE_NAME) {
+                            return caches.delete(cacheName)
+                        }
+                    })
                 )
             })
-            .then(() => self.skipWaiting())
-            .catch(() => {
-                // Continue without caching if there's an error
-                return self.skipWaiting()
-            })
+            .then(() => self.clients.claim())
+            .catch(() => self.clients.claim())
     )
 })
 
 self.addEventListener('fetch', event => {
+    // Simple fetch without caching to avoid errors
     event.respondWith(
-        caches
-            .match(event.request)
-            .then(response => {
-                if (response) {
-                    return response
-                }
-                return fetch(event.request)
-            })
-            .catch(() => {
-                // Return a basic response for failed requests
-                return new Response('Offline', { status: 200 })
-            })
+        fetch(event.request).catch(() => {
+            return new Response('', { status: 200 })
+        })
     )
 })
-
-// Suppress service worker console messages
-const originalConsoleError = console.error
-const originalConsoleLog = console.log
-
-console.error = function (...args) {
-    const message = args.join(' ').toLowerCase()
-    if (message.includes('failed to execute') || message.includes('request failed') || message.includes('cache')) {
-        return
-    }
-    originalConsoleError.apply(console, args)
-}
-
-console.log = function (...args) {
-    const message = args.join(' ').toLowerCase()
-    if (
-        message.includes('service worker') ||
-        message.includes('caching') ||
-        message.includes('installing') ||
-        message.includes('activating')
-    ) {
-        return
-    }
-    originalConsoleLog.apply(console, args)
-}

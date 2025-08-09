@@ -14,7 +14,7 @@ import './utils/SampleDataGenerator.js'
 // Register Chart.js components
 Chart.register(...registerables)
 
-console.log('🚀 Starting RELI Application...')
+// console.log('🚀 Starting RELI Application...')
 
 // Application state management
 let appData = {
@@ -2655,13 +2655,13 @@ async function renderCurrentView() {
     content += '</div>'
 
     appElement.innerHTML = content
-    console.log(`✅ Rendered view: ${currentView}`)
+    // console.log(`✅ Rendered view: ${currentView}`)
 }
 
 // Initialize app
 async function initApp() {
     try {
-        console.log('🚀 Initializing RELI Application...')
+        // console.log('🚀 Initializing RELI Application...')
 
         const appElement = document.getElementById('app')
         if (!appElement) {
@@ -2669,11 +2669,11 @@ async function initApp() {
             return
         }
 
-        console.log('✅ App element found')
+        // console.log('✅ App element found')
 
         // Test database connection
         if (useDatabase && isOnline) {
-            console.log('🔍 Testing database connection...')
+            // console.log('🔍 Testing database connection...')
             const dbConnected = await testConnection()
             if (!dbConnected) {
                 console.warn('⚠️ Database connection failed, using localStorage only')
@@ -2691,7 +2691,7 @@ async function initApp() {
         await loadFromStorage()
 
         // Initialize location service
-        console.log('📍 Initializing location service...')
+        // console.log('📍 Initializing location service...')
         await locationService.loadLocationHistory()
 
         // Render initial view
@@ -2706,7 +2706,7 @@ async function initApp() {
             }, 300)
         }
 
-        console.log('✅ RELI Application initialized successfully')
+        // console.log('✅ RELI Application initialized successfully')
         const dbStatus = useDatabase ? 'dengan database' : 'mode offline'
         showToast(`RELI berhasil dimuat ${dbStatus}!`, 'success')
     } catch (error) {
@@ -2816,4 +2816,4 @@ if (document.readyState === 'loading') {
     startApp()
 }
 
-console.log('📱 RELI Application loaded')
+// console.log('📱 RELI Application loaded')

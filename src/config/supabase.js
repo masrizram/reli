@@ -37,7 +37,7 @@ export async function testConnection() {
             return false
         }
 
-        console.log('✅ Supabase connected successfully')
+        // console.log('✅ Supabase connected successfully')
         return true
     } catch (error) {
         console.error('❌ Supabase connection failed:', error)

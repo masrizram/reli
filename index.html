@@ -48,7 +48,7 @@
             const originalError = console.error
             const originalLog = console.log
 
-            // List of patterns to suppress
+            // Comprehensive suppression patterns
             const suppressPatterns = [
                 'tailwindcss',
                 'production',
@@ -68,6 +68,26 @@
                 'failed to load resource',
                 'beforeinstallpromptevent',
                 'banner not shown',
+                'service worker',
+                'caching',
+                'installing',
+                'activating',
+                'activated successfully',
+                'static files',
+                'error caching',
+                'failed to execute',
+                'request failed',
+                'starting reli',
+                'initializing reli',
+                'app element found',
+                'testing database',
+                'reli application loaded',
+                'app load time',
+                'supabase connected',
+                'data loaded from database',
+                'initializing location',
+                'rendered view',
+                'reli application initialized',
                 '404',
             ]
 
@@ -76,6 +96,7 @@
                 return suppressPatterns.some(pattern => message.includes(pattern))
             }
 
+            // Override all console methods
             console.warn = function (...args) {
                 if (shouldSuppress(args)) return
                 originalWarn.apply(console, args)
@@ -87,10 +108,12 @@
             }
 
             console.log = function (...args) {
-                const message = args.join(' ').toLowerCase()
-                if (message.includes('banner not shown') || message.includes('beforeinstallpromptevent')) {
-                    return
-                }
+                if (shouldSuppress(args)) return
+                originalLog.apply(console, args)
+            }
+
+            console.info = function (...args) {
+                if (shouldSuppress(args)) return
                 originalLog.apply(console, args)
             }
         </script>
@@ -686,7 +709,7 @@
             window.addEventListener('load', () => {
                 if ('performance' in window) {
                     const perfData = performance.getEntriesByType('navigation')[0]
-                    console.log('📊 App load time:', Math.round(perfData.loadEventEnd - perfData.fetchStart), 'ms')
+                    // console.log('📊 App load time:', Math.round(perfData.loadEventEnd - perfData.fetchStart), 'ms')
                 }
             })
 

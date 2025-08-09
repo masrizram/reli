@@ -67,7 +67,7 @@ export class DatabaseService {
             }
 
             if (data) {
-                console.log('✅ Data loaded from database:', date)
+                // console.log('✅ Data loaded from database:', date)
                 return {
                     success: true,
                     data: {
