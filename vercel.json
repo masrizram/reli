@@ -1,4 +1,7 @@
 {
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist",
+    "framework": "vite",
     "headers": [
         {
             "source": "/(.*)",
@@ -27,10 +30,5 @@
             "source": "/manifest.json",
             "destination": "/public/manifest.json"
         }
-    ],
-    "functions": {
-        "src/api/*.js": {
-            "runtime": "nodejs18.x"
-        }
-    }
+    ]
 }
