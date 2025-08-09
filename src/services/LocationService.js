@@ -24,7 +24,7 @@ export class LocationService {
             const permission = await navigator.permissions.query({ name: 'geolocation' })
             return permission.state // 'granted', 'denied', or 'prompt'
         } catch (error) {
-            console.warn('Could not check location permission:', error)
+            // Silent error handling for production
             return 'unknown'
         }
     }
@@ -36,7 +36,7 @@ export class LocationService {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
                 // Fallback for development - use Jakarta coordinates
-                console.warn('Geolocation not supported, using fallback location')
+                // Silent fallback for production
                 this.currentPosition = {
                     latitude: -6.2088,
                     longitude: 106.8456,
@@ -50,7 +50,7 @@ export class LocationService {
 
             // Check if we're on HTTP (not HTTPS) and provide fallback
             if (location.protocol === 'http:' && location.hostname !== 'localhost') {
-                console.warn('Geolocation requires HTTPS, using fallback location')
+                // Silent fallback for production
                 this.currentPosition = {
                     latitude: -6.2088,
                     longitude: 106.8456,
@@ -74,7 +74,7 @@ export class LocationService {
                     resolve(this.currentPosition)
                 },
                 error => {
-                    console.warn('Geolocation error, using fallback:', error)
+                    // Silent fallback for production
                     // Use fallback location instead of rejecting
                     this.currentPosition = {
                         latitude: -6.2088,

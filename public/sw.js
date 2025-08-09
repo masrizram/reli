@@ -3,26 +3,7 @@ const STATIC_CACHE = 'reli-static-v2.0.0'
 const DYNAMIC_CACHE = 'reli-dynamic-v2.0.0'
 
 // Files to cache immediately
-const STATIC_FILES = [
-    '/',
-    '/index.html',
-    '/src/main.js',
-    '/src/organisms/App.js',
-    '/src/molecules/PlatformInput.js',
-    '/src/molecules/FuelInput.js',
-    '/src/molecules/AdditionalCosts.js',
-    '/src/molecules/AnalyticsDashboard.js',
-    '/src/molecules/SmartNotifications.js',
-    '/src/molecules/LocationFeatures.js',
-    '/src/molecules/AdvancedAnalytics.js',
-    '/src/molecules/EarningsOptimizer.js',
-    '/src/molecules/AutomationHub.js',
-    '/src/atoms/Button.js',
-    '/src/atoms/Input.js',
-    '/src/atoms/Label.js',
-    '/src/utils/storage.js',
-    '/manifest.json',
-]
+const STATIC_FILES = ['/', '/index.html', '/src/main.js', '/manifest.json']
 
 // Install event - cache static files
 self.addEventListener('install', event => {
@@ -139,8 +120,8 @@ self.addEventListener('push', event => {
 
     const options = {
         body: event.data ? event.data.text() : 'RELI notification',
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
+        icon: '/icon-192.svg',
+        badge: '/icon-192.svg',
         vibrate: [200, 100, 200],
         data: {
             dateOfArrival: Date.now(),
@@ -150,12 +131,12 @@ self.addEventListener('push', event => {
             {
                 action: 'open',
                 title: 'Buka RELI',
-                icon: '/icon-192.png',
+                icon: '/icon-192.svg',
             },
             {
                 action: 'close',
                 title: 'Tutup',
-                icon: '/icon-192.png',
+                icon: '/icon-192.svg',
             },
         ],
     }
@@ -215,7 +196,7 @@ async function syncData() {
             // Show success notification
             self.registration.showNotification('RELI - Sync Berhasil', {
                 body: 'Data berhasil disinkronisasi',
-                icon: '/icon-192.png',
+                icon: '/icon-192.svg',
                 tag: 'sync-success',
             })
         }
@@ -225,7 +206,7 @@ async function syncData() {
         // Show error notification
         self.registration.showNotification('RELI - Sync Gagal', {
             body: 'Gagal sinkronisasi data. Akan dicoba lagi nanti.',
-            icon: '/icon-192.png',
+            icon: '/icon-192.svg',
             tag: 'sync-error',
         })
     }

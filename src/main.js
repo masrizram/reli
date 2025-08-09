@@ -2800,14 +2800,20 @@ window.toggleLocationTracking = toggleLocationTracking
 window.getCurrentLocation = getCurrentLocation
 window.clearLocationHistory = clearLocationHistory
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', initApp)
+// Prevent double initialization
+let appInitialized = false
 
-// Fallback initialization
+async function startApp() {
+    if (appInitialized) return
+    appInitialized = true
+    await initApp()
+}
+
+// Initialize when DOM is ready
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp)
+    document.addEventListener('DOMContentLoaded', startApp)
 } else {
-    initApp()
+    startApp()
 }
 
 console.log('📱 RELI Application loaded')

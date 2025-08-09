@@ -4,7 +4,12 @@ export default {
     theme: {
         extend: {},
     },
-    plugins: [],
+    plugins: [
+        require('daisyui'),
+        require('@tailwindcss/forms'),
+        require('@tailwindcss/typography'),
+        require('@tailwindcss/aspect-ratio'),
+    ],
     daisyui: {
         themes: ['light', 'dark', 'cupcake'],
     },

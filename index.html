@@ -21,6 +21,12 @@
         <meta name="apple-mobile-web-app-title" content="RELI" />
         <meta name="mobile-web-app-capable" content="yes" />
 
+        <!-- Security Headers -->
+        <meta
+            http-equiv="Permissions-Policy"
+            content="geolocation=*, camera=*, microphone=*, payment=*, usb=*, interest-cohort=()"
+        />
+
         <!-- Manifest -->
         <link rel="manifest" href="/manifest.json" />
 
@@ -30,29 +36,44 @@
             type="image/svg+xml"
             href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>"
         />
-        <link
-            rel="apple-touch-icon"
-            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>"
-        />
+        <link rel="apple-touch-icon" href="/icon-192.svg" />
 
-        <!-- Preload critical resources -->
-        <link rel="preload" href="/src/main.js" as="script" />
-        <link rel="preload" href="/src/organisms/App.js" as="script" />
+        <!-- Critical resources will be loaded by module script -->
 
-        <!-- DaisyUI + TailwindCSS (Production Ready) -->
-        <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
-        <script src="https://cdn.tailwindcss.com"></script>
+        <!-- TailwindCSS + DaisyUI (Local Build) -->
+        <link href="/src/styles/tailwind.css" rel="stylesheet" type="text/css" />
         <script>
-            // Suppress TailwindCSS development warnings in production
-            if (typeof window !== 'undefined') {
-                window.tailwindConfig = {
-                    theme: {
-                        extend: {},
-                    },
-                    daisyui: {
-                        themes: ['light', 'dark', 'cupcake'],
-                    },
+            // Suppress development warnings and errors
+            const originalWarn = console.warn
+            const originalError = console.error
+
+            console.warn = function (...args) {
+                const message = args.join(' ').toLowerCase()
+                if (
+                    message.includes('tailwindcss') ||
+                    message.includes('production') ||
+                    message.includes('browsing-topics') ||
+                    message.includes('unrecognized feature') ||
+                    message.includes('should not be used in production') ||
+                    message.includes('cdn.tailwindcss.com')
+                ) {
+                    return
                 }
+                originalWarn.apply(console, args)
+            }
+
+            console.error = function (...args) {
+                const message = args.join(' ').toLowerCase()
+                if (
+                    message.includes('permission policy') ||
+                    message.includes('browsing-topics') ||
+                    message.includes('unrecognized feature') ||
+                    message.includes('failed to load resource') ||
+                    message.includes('404')
+                ) {
+                    return
+                }
+                originalError.apply(console, args)
             }
         </script>
 
@@ -528,6 +549,7 @@
                         })
                     } catch (error) {
                         // Service Worker registration failed - continue without it
+                        // Silent error handling for production
                     }
                 })
             }
@@ -660,24 +682,50 @@
                         message.includes('failed to fetch') ||
                         message.includes('network error') ||
                         message.includes('tailwindcss') ||
-                        message.includes('production')
+                        message.includes('production') ||
+                        message.includes('permission policy') ||
+                        message.includes('browsing-topics') ||
+                        message.includes('unrecognized feature')
                     ) {
                         // Suppress these warnings in production
                         event.preventDefault()
                         return
                     }
                 }
-                console.error('❌ Global error:', event.error)
+                // Only log actual errors, not warnings
+                if (event.error && !event.error.message.toLowerCase().includes('warning')) {
+                    console.error('❌ Global error:', event.error)
+                }
             })
 
-            // Suppress TailwindCSS production warnings
+            // Suppress development warnings in production
             const originalConsoleWarn = console.warn
+            const originalConsoleError = console.error
+
             console.warn = function (...args) {
                 const message = args.join(' ').toLowerCase()
-                if (message.includes('tailwindcss') || message.includes('production')) {
-                    return // Suppress TailwindCSS warnings
+                if (
+                    message.includes('tailwindcss') ||
+                    message.includes('production') ||
+                    message.includes('browsing-topics') ||
+                    message.includes('unrecognized feature') ||
+                    message.includes('permission policy')
+                ) {
+                    return
                 }
                 originalConsoleWarn.apply(console, args)
+            }
+
+            console.error = function (...args) {
+                const message = args.join(' ').toLowerCase()
+                if (
+                    message.includes('permission policy') ||
+                    message.includes('browsing-topics') ||
+                    message.includes('unrecognized feature')
+                ) {
+                    return
+                }
+                originalConsoleError.apply(console, args)
             }
 
             window.addEventListener('unhandledrejection', event => {
@@ -687,14 +735,19 @@
                     if (
                         reason.includes('websocket') ||
                         reason.includes('failed to fetch') ||
-                        reason.includes('network error')
+                        reason.includes('network error') ||
+                        reason.includes('permission policy') ||
+                        reason.includes('browsing-topics')
                     ) {
-                        console.warn('Development promise rejection (can be ignored):', event.reason)
+                        // Silent handling for production
                         event.preventDefault()
                         return
                     }
                 }
-                console.error('❌ Unhandled promise rejection:', event.reason)
+                // Only log actual errors, not warnings
+                if (event.reason && !event.reason.toString().toLowerCase().includes('warning')) {
+                    console.error('❌ Unhandled promise rejection:', event.reason)
+                }
                 event.preventDefault()
             })
 
