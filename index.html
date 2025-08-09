@@ -1,717 +1,722 @@
 <!doctype html>
 <html lang="id" data-theme="light">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+        <title>RELI - Rangkuman Earnings Lintas-Industri</title>
+        <meta
+            name="description"
+            content="Aplikasi kalkulator pendapatan driver ojol multi-platform dengan AI analytics, GPS tracking, dan automasi cerdas"
+        />
+        <meta
+            name="keywords"
+            content="ojol, driver, pendapatan, kalkulator, grab, gojek, maxim, indrive, analytics, GPS, AI"
+        />
+        <meta name="author" content="RELI Team" />
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>RELI - Rangkuman Earnings Lintas-Industri</title>
-    <meta name="description"
-        content="Aplikasi kalkulator pendapatan driver ojol multi-platform dengan AI analytics, GPS tracking, dan automasi cerdas" />
-    <meta name="keywords"
-        content="ojol, driver, pendapatan, kalkulator, grab, gojek, maxim, indrive, analytics, GPS, AI" />
-    <meta name="author" content="RELI Team" />
+        <!-- PWA Meta Tags -->
+        <meta name="theme-color" content="#3b82f6" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="RELI" />
+        <meta name="mobile-web-app-capable" content="yes" />
 
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#3b82f6" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="RELI" />
-    <meta name="mobile-web-app-capable" content="yes" />
+        <!-- Manifest -->
+        <link rel="manifest" href="/manifest.json" />
 
-    <!-- Manifest -->
-    <link rel="manifest" href="/manifest.json" />
+        <!-- Icons -->
+        <link
+            rel="icon"
+            type="image/svg+xml"
+            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>"
+        />
+        <link
+            rel="apple-touch-icon"
+            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>"
+        />
 
-    <!-- Icons -->
-    <link rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
-    <link rel="apple-touch-icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
+        <!-- Preload critical resources -->
+        <link rel="preload" href="/src/main.js" as="script" />
+        <link rel="preload" href="/src/organisms/App.js" as="script" />
 
-    <!-- Preload critical resources -->
-    <link rel="preload" href="/src/main.js" as="script" />
-    <link rel="preload" href="/src/organisms/App.js" as="script" />
-
-    <!-- DaisyUI + TailwindCSS (Production Ready) -->
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        // Suppress TailwindCSS development warnings in production
-        if (typeof window !== 'undefined') {
-            window.tailwindConfig = {
-                theme: {
-                    extend: {},
-                },
-                daisyui: {
-                    themes: ['light', 'dark', 'cupcake'],
-                },
+        <!-- DaisyUI + TailwindCSS (Production Ready) -->
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            // Suppress TailwindCSS development warnings in production
+            if (typeof window !== 'undefined') {
+                window.tailwindConfig = {
+                    theme: {
+                        extend: {},
+                    },
+                    daisyui: {
+                        themes: ['light', 'dark', 'cupcake'],
+                    },
+                }
             }
-        }
-    </script>
+        </script>
 
-    <!-- Custom CSS -->
-    <link href="/src/styles/sidebar.css" rel="stylesheet" type="text/css" />
-    <link href="/src/styles/animations.css" rel="stylesheet" type="text/css" />
+        <!-- Custom CSS -->
+        <link href="/src/styles/sidebar.css" rel="stylesheet" type="text/css" />
+        <link href="/src/styles/animations.css" rel="stylesheet" type="text/css" />
 
-    <style>
-        /* Critical CSS Reset */
-        * {
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            margin: 0 !important;
-            padding: 0 !important;
-            height: 100%;
-            overflow-x: hidden;
-            background-color: #f3f4f6;
-        }
-
-        #app {
-            min-height: 100vh;
-            position: relative;
-            z-index: 1;
-            margin: 0 !important;
-            padding: 0 !important;
-            display: flex;
-        }
-
-        /* Fix for white space issue */
-        .min-h-screen {
-            min-height: 100vh !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        .currency-input {
-            text-align: right;
-        }
-
-        /* Animations */
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
+        <style>
+            /* Critical CSS Reset */
+            * {
+                box-sizing: border-box;
             }
 
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
+            html,
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                height: 100%;
+                overflow-x: hidden;
+                background-color: #f3f4f6;
             }
 
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-
-        @keyframes slideInUp {
-            from {
-                transform: translateY(100%);
-                opacity: 0;
+            #app {
+                min-height: 100vh;
+                position: relative;
+                z-index: 1;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: flex;
             }
 
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideOutDown {
-            from {
-                transform: translateY(0);
-                opacity: 1;
+            /* Fix for white space issue */
+            .min-h-screen {
+                min-height: 100vh !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
 
-            to {
-                transform: translateY(100%);
-                opacity: 0;
-            }
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
+            .currency-input {
+                text-align: right;
             }
 
-            50% {
-                opacity: 0.5;
-            }
-        }
+            /* Animations */
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
 
-        @keyframes bounce {
-
-            0%,
-            20%,
-            53%,
-            80%,
-            100% {
-                transform: translate3d(0, 0, 0);
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
             }
 
-            40%,
-            43% {
-                transform: translate3d(0, -30px, 0);
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
             }
 
-            70% {
-                transform: translate3d(0, -15px, 0);
+            @keyframes slideInUp {
+                from {
+                    transform: translateY(100%);
+                    opacity: 0;
+                }
+
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
             }
 
-            90% {
-                transform: translate3d(0, -4px, 0);
+            @keyframes slideOutDown {
+                from {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+
+                to {
+                    transform: translateY(100%);
+                    opacity: 0;
+                }
             }
-        }
 
-        .loading-spinner {
-            animation: bounce 2s infinite;
-        }
+            @keyframes pulse {
+                0%,
+                100% {
+                    opacity: 1;
+                }
 
-        /* PWA Install Button */
-        .install-prompt {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            display: none;
-        }
+                50% {
+                    opacity: 0.5;
+                }
+            }
 
-        /* Offline indicator */
-        .offline-indicator {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: #ef4444;
-            color: white;
-            text-align: center;
-            padding: 8px;
-            font-size: 14px;
-            z-index: 9999;
-            display: none;
-        }
+            @keyframes bounce {
+                0%,
+                20%,
+                53%,
+                80%,
+                100% {
+                    transform: translate3d(0, 0, 0);
+                }
 
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
+                40%,
+                43% {
+                    transform: translate3d(0, -30px, 0);
+                }
 
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
+                70% {
+                    transform: translate3d(0, -15px, 0);
+                }
 
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
+                90% {
+                    transform: translate3d(0, -4px, 0);
+                }
+            }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
+            .loading-spinner {
+                animation: bounce 2s infinite;
+            }
 
-        /* Loading screen */
-        .loading-screen {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
+            /* PWA Install Button */
+            .install-prompt {
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 1000;
+                display: none;
+            }
 
-        /* Floating action button */
-        .fab {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 100;
-            border-radius: 50%;
-            width: 56px;
-            height: 56px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
+            /* Offline indicator */
+            .offline-indicator {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: #ef4444;
+                color: white;
+                text-align: center;
+                padding: 8px;
+                font-size: 14px;
+                z-index: 9999;
+                display: none;
+            }
 
-        /* Clean Sidebar styles */
-        .sidebar {
-            transition: transform 0.3s ease;
-        }
+            /* Custom scrollbar */
+            ::-webkit-scrollbar {
+                width: 8px;
+            }
 
-        /* Sidebar overlay */
-        #sidebar-overlay {
-            transition: opacity 0.3s ease;
-        }
+            ::-webkit-scrollbar-track {
+                background: #f1f5f9;
+            }
 
-        #sidebar-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
+            ::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 4px;
+            }
 
-        #sidebar-overlay:not(.hidden) {
-            opacity: 1;
-            pointer-events: auto;
-        }
+            ::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
 
-        .sidebar-collapsed {
-            width: 4rem !important;
-        }
+            /* Loading screen */
+            .loading-screen {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+            }
 
-        .sidebar-collapsed .sidebar-text {
-            display: none;
-        }
+            /* Floating action button */
+            .fab {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 100;
+                border-radius: 50%;
+                width: 56px;
+                height: 56px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
 
-        .sidebar-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
-            border-radius: 0.75rem;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            margin: 0.125rem 0;
-            font-weight: 500;
-            color: hsl(var(--bc) / 0.7);
-        }
-
-        .sidebar-item:hover {
-            background-color: hsl(var(--p) / 0.1);
-            color: hsl(var(--p));
-            transform: translateX(4px);
-        }
-
-        .sidebar-item.active {
-            background-color: hsl(var(--p));
-            color: hsl(var(--pc));
-            box-shadow: 0 4px 12px hsl(var(--p) / 0.3);
-        }
-
-        .sidebar-item.active:hover {
-            transform: none;
-            background-color: hsl(var(--p));
-        }
-
-        /* Simplified responsive layout */
-        @media (max-width: 1023px) {
+            /* Clean Sidebar styles */
             .sidebar {
-                transform: translateX(-100%);
+                transition: transform 0.3s ease;
             }
 
-            .sidebar.translate-x-0 {
-                transform: translateX(0);
-            }
-        }
-
-        /* Professional card styles */
-        .card-professional {
-            background: white;
-            border-radius: 0.75rem;
-            box-shadow:
-                0 1px 3px 0 rgb(0 0 0 / 0.1),
-                0 1px 2px -1px rgb(0 0 0 / 0.1);
-            border: 1px solid hsl(var(--b2));
-            transition: all 0.2s ease;
-        }
-
-        .card-professional:hover {
-            box-shadow:
-                0 4px 6px -1px rgb(0 0 0 / 0.1),
-                0 2px 4px -2px rgb(0 0 0 / 0.1);
-            transform: translateY(-1px);
-        }
-
-        /* Professional gradient backgrounds */
-        .gradient-primary {
-            background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(var(--s)) 100%);
-        }
-
-        .gradient-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        /* Icon containers */
-        .icon-container {
-            width: 3rem;
-            height: 3rem;
-            border-radius: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        /* Stats cards */
-        .stat-card {
-            background: white;
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-            border: 1px solid hsl(var(--b2));
-            transition: all 0.2s ease;
-        }
-
-        .stat-card:hover {
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            transform: translateY(-1px);
-        }
-
-        /* Mobile responsive adjustments */
-        @media (max-width: 768px) {
-            .container {
-                padding-left: 1rem;
-                padding-right: 1rem;
+            /* Sidebar overlay */
+            #sidebar-overlay {
+                transition: opacity 0.3s ease;
             }
 
-            .stats {
-                grid-template-columns: 1fr;
-            }
-
-            .card-body {
-                padding: 1rem;
-            }
-
-            .hero-content {
-                padding: 2rem 1rem;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            .grid.md\\:grid-cols-2 {
-                grid-template-columns: 1fr;
-            }
-
-            .grid.lg\\:grid-cols-3 {
-                grid-template-columns: 1fr;
-            }
-
-            .grid.md\\:grid-cols-4 {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        /* Tablet responsive */
-        @media (min-width: 768px) and (max-width: 1024px) {
-            .grid.lg\\:grid-cols-3 {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        /* Page transitions */
-        .page-transition {
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from {
+            #sidebar-overlay.hidden {
                 opacity: 0;
-                transform: translateY(10px);
+                pointer-events: none;
             }
 
-            to {
+            #sidebar-overlay:not(.hidden) {
                 opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Card hover effects */
-        .card:hover {
-            transform: translateY(-2px);
-            transition: transform 0.2s ease;
-        }
-
-        /* Stats animation */
-        .stat-value {
-            animation: countUp 0.5s ease-out;
-        }
-
-        @keyframes countUp {
-            from {
-                opacity: 0;
-                transform: scale(0.8);
+                pointer-events: auto;
             }
 
-            to {
-                opacity: 1;
-                transform: scale(1);
+            .sidebar-collapsed {
+                width: 4rem !important;
             }
-        }
-    </style>
-</head>
 
-<body class="bg-base-100">
-    <!-- Offline Indicator -->
-    <div id="offline-indicator" class="offline-indicator">
-        📡 Tidak ada koneksi internet. Aplikasi berjalan dalam mode offline.
-    </div>
+            .sidebar-collapsed .sidebar-text {
+                display: none;
+            }
 
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="loading-screen fixed inset-0 flex items-center justify-center z-50">
-        <div class="text-center">
-            <div class="loading-spinner text-6xl mb-4">📊</div>
-            <h1 class="text-3xl font-bold mb-2">RELI</h1>
-            <p class="text-lg opacity-90 mb-4">Rangkuman Earnings Lintas-Industri</p>
-            <p class="opacity-70 mb-6">Memuat fitur AI Analytics & GPS Tracking...</p>
-            <div class="loading loading-dots loading-lg"></div>
+            .sidebar-item {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.75rem 1rem;
+                border-radius: 0.75rem;
+                transition: all 0.2s ease;
+                cursor: pointer;
+                margin: 0.125rem 0;
+                font-weight: 500;
+                color: hsl(var(--bc) / 0.7);
+            }
+
+            .sidebar-item:hover {
+                background-color: hsl(var(--p) / 0.1);
+                color: hsl(var(--p));
+                transform: translateX(4px);
+            }
+
+            .sidebar-item.active {
+                background-color: hsl(var(--p));
+                color: hsl(var(--pc));
+                box-shadow: 0 4px 12px hsl(var(--p) / 0.3);
+            }
+
+            .sidebar-item.active:hover {
+                transform: none;
+                background-color: hsl(var(--p));
+            }
+
+            /* Simplified responsive layout */
+            @media (max-width: 1023px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                }
+
+                .sidebar.translate-x-0 {
+                    transform: translateX(0);
+                }
+            }
+
+            /* Professional card styles */
+            .card-professional {
+                background: white;
+                border-radius: 0.75rem;
+                box-shadow:
+                    0 1px 3px 0 rgb(0 0 0 / 0.1),
+                    0 1px 2px -1px rgb(0 0 0 / 0.1);
+                border: 1px solid hsl(var(--b2));
+                transition: all 0.2s ease;
+            }
+
+            .card-professional:hover {
+                box-shadow:
+                    0 4px 6px -1px rgb(0 0 0 / 0.1),
+                    0 2px 4px -2px rgb(0 0 0 / 0.1);
+                transform: translateY(-1px);
+            }
+
+            /* Professional gradient backgrounds */
+            .gradient-primary {
+                background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(var(--s)) 100%);
+            }
+
+            .gradient-card {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+
+            /* Icon containers */
+            .icon-container {
+                width: 3rem;
+                height: 3rem;
+                border-radius: 0.75rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+            }
+
+            /* Stats cards */
+            .stat-card {
+                background: white;
+                border-radius: 0.75rem;
+                padding: 1.5rem;
+                box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+                border: 1px solid hsl(var(--b2));
+                transition: all 0.2s ease;
+            }
+
+            .stat-card:hover {
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+                transform: translateY(-1px);
+            }
+
+            /* Mobile responsive adjustments */
+            @media (max-width: 768px) {
+                .container {
+                    padding-left: 1rem;
+                    padding-right: 1rem;
+                }
+
+                .stats {
+                    grid-template-columns: 1fr;
+                }
+
+                .card-body {
+                    padding: 1rem;
+                }
+
+                .hero-content {
+                    padding: 2rem 1rem;
+                }
+
+                .grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .grid.md\\:grid-cols-2 {
+                    grid-template-columns: 1fr;
+                }
+
+                .grid.lg\\:grid-cols-3 {
+                    grid-template-columns: 1fr;
+                }
+
+                .grid.md\\:grid-cols-4 {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+
+            /* Tablet responsive */
+            @media (min-width: 768px) and (max-width: 1024px) {
+                .grid.lg\\:grid-cols-3 {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+
+            /* Page transitions */
+            .page-transition {
+                animation: fadeIn 0.3s ease-in-out;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            /* Card hover effects */
+            .card:hover {
+                transform: translateY(-2px);
+                transition: transform 0.2s ease;
+            }
+
+            /* Stats animation */
+            .stat-value {
+                animation: countUp 0.5s ease-out;
+            }
+
+            @keyframes countUp {
+                from {
+                    opacity: 0;
+                    transform: scale(0.8);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+        </style>
+    </head>
+
+    <body class="bg-base-100">
+        <!-- Offline Indicator -->
+        <div id="offline-indicator" class="offline-indicator">
+            📡 Tidak ada koneksi internet. Aplikasi berjalan dalam mode offline.
         </div>
-    </div>
 
-    <!-- PWA Install Prompt -->
-    <div id="install-prompt" class="install-prompt">
-        <div class="alert alert-info shadow-lg">
-            <div class="flex items-center gap-3">
-                <span class="text-2xl">📱</span>
-                <div>
-                    <h3 class="font-bold">Install RELI</h3>
-                    <div class="text-sm">Install aplikasi untuk pengalaman yang lebih baik</div>
-                </div>
-                <div class="flex gap-2">
-                    <button id="install-button" class="btn btn-primary btn-sm">Install</button>
-                    <button id="dismiss-install" class="btn btn-ghost btn-sm">Nanti</button>
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="loading-screen fixed inset-0 flex items-center justify-center z-50">
+            <div class="text-center">
+                <div class="loading-spinner text-6xl mb-4">📊</div>
+                <h1 class="text-3xl font-bold mb-2">RELI</h1>
+                <p class="text-lg opacity-90 mb-4">Rangkuman Earnings Lintas-Industri</p>
+                <p class="opacity-70 mb-6">Memuat fitur AI Analytics & GPS Tracking...</p>
+                <div class="loading loading-dots loading-lg"></div>
+            </div>
+        </div>
+
+        <!-- PWA Install Prompt -->
+        <div id="install-prompt" class="install-prompt">
+            <div class="alert alert-info shadow-lg">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📱</span>
+                    <div>
+                        <h3 class="font-bold">Install RELI</h3>
+                        <div class="text-sm">Install aplikasi untuk pengalaman yang lebih baik</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="install-button" class="btn btn-primary btn-sm">Install</button>
+                        <button id="dismiss-install" class="btn btn-ghost btn-sm">Nanti</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Update Available Prompt -->
-    <div id="update-prompt" class="fixed top-4 right-4 z-50" style="display: none">
-        <div class="alert alert-success shadow-lg max-w-sm">
-            <div class="flex items-center gap-3">
-                <span class="text-xl">🔄</span>
-                <div>
-                    <h3 class="font-bold text-sm">Update Tersedia</h3>
-                    <div class="text-xs">Versi baru RELI sudah tersedia</div>
+        <!-- Update Available Prompt -->
+        <div id="update-prompt" class="fixed top-4 right-4 z-50" style="display: none">
+            <div class="alert alert-success shadow-lg max-w-sm">
+                <div class="flex items-center gap-3">
+                    <span class="text-xl">🔄</span>
+                    <div>
+                        <h3 class="font-bold text-sm">Update Tersedia</h3>
+                        <div class="text-xs">Versi baru RELI sudah tersedia</div>
+                    </div>
+                    <button id="update-button" class="btn btn-success btn-xs">Update</button>
                 </div>
-                <button id="update-button" class="btn btn-success btn-xs">Update</button>
             </div>
         </div>
-    </div>
 
-    <!-- Floating Action Button -->
-    <button id="fab-menu" class="fab btn btn-primary lg:hidden" title="Menu">📱</button>
+        <!-- Floating Action Button -->
+        <button id="fab-menu" class="fab btn btn-primary lg:hidden" title="Menu">📱</button>
 
-    <!-- Main App Container -->
-    <div id="app" class="min-h-screen"></div>
+        <!-- Main App Container -->
+        <div id="app" class="min-h-screen"></div>
 
-    <!-- Scripts -->
-    <script type="module" src="/src/main.js"></script>
+        <!-- Scripts -->
+        <script type="module" src="/src/main.js"></script>
 
-    <!-- PWA and Service Worker Registration -->
-    <script>
-        // Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', async () => {
-                try {
-                    const registration = await navigator.serviceWorker.register('/sw.js')
+        <!-- PWA and Service Worker Registration -->
+        <script>
+            // Service Worker Registration
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', async () => {
+                    try {
+                        const registration = await navigator.serviceWorker.register('/sw.js')
 
-                    // Check for updates
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing
-                        if (newWorker) {
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    showUpdatePrompt()
-                                }
-                            })
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing
+                            if (newWorker) {
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        showUpdatePrompt()
+                                    }
+                                })
+                            }
+                        })
+                    } catch (error) {
+                        // Service Worker registration failed - continue without it
+                    }
+                })
+            }
+
+            // PWA Install Prompt
+            let deferredPrompt
+            window.addEventListener('beforeinstallprompt', e => {
+                e.preventDefault()
+                deferredPrompt = e
+                showInstallPrompt()
+            })
+
+            function showInstallPrompt() {
+                const installPrompt = document.getElementById('install-prompt')
+                const installButton = document.getElementById('install-button')
+                const dismissButton = document.getElementById('dismiss-install')
+
+                if (installPrompt && !localStorage.getItem('reli-install-dismissed')) {
+                    installPrompt.style.display = 'block'
+
+                    installButton.addEventListener('click', async () => {
+                        if (deferredPrompt) {
+                            deferredPrompt.prompt()
+                            const { outcome } = await deferredPrompt.userChoice
+
+                            deferredPrompt = null
+                            installPrompt.style.display = 'none'
                         }
                     })
-                } catch (error) {
-                    // Service Worker registration failed - continue without it
+
+                    dismissButton.addEventListener('click', () => {
+                        installPrompt.style.display = 'none'
+                        localStorage.setItem('reli-install-dismissed', 'true')
+                    })
+                }
+            }
+
+            function showUpdatePrompt() {
+                const updatePrompt = document.getElementById('update-prompt')
+                const updateButton = document.getElementById('update-button')
+
+                if (updatePrompt) {
+                    updatePrompt.style.display = 'block'
+
+                    updateButton.addEventListener('click', () => {
+                        if (navigator.serviceWorker.controller) {
+                            navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' })
+                        }
+                        window.location.reload()
+                    })
+                }
+            }
+
+            // Online/Offline Status
+            function updateOnlineStatus() {
+                const offlineIndicator = document.getElementById('offline-indicator')
+                if (offlineIndicator) {
+                    offlineIndicator.style.display = navigator.onLine ? 'none' : 'block'
+                }
+            }
+
+            window.addEventListener('online', updateOnlineStatus)
+            window.addEventListener('offline', updateOnlineStatus)
+            updateOnlineStatus()
+
+            // Simplified loading screen removal
+            function hideLoadingScreen() {
+                const loadingScreen = document.getElementById('loading-screen')
+                if (loadingScreen) {
+                    loadingScreen.style.display = 'none'
+                    loadingScreen.remove()
+                }
+            }
+
+            // Single trigger to hide loading screen
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(hideLoadingScreen, 500)
+            })
+
+            // Fallback: force hide after 1 second
+            setTimeout(hideLoadingScreen, 1000)
+
+            // Floating Action Button & Mobile Menu
+            document.addEventListener('DOMContentLoaded', () => {
+                // Wait for dashboard to be rendered
+                setTimeout(() => {
+                    const fab = document.getElementById('fab-menu')
+                    if (fab) {
+                        fab.addEventListener('click', e => {
+                            e.preventDefault()
+                            e.stopPropagation()
+
+                            // Toggle sidebar on mobile
+                            const sidebar = document.querySelector('.sidebar')
+                            const overlay = document.querySelector('#sidebar-overlay')
+
+                            if (sidebar && overlay) {
+                                const isOpen = sidebar.classList.contains('sidebar-open')
+
+                                if (isOpen) {
+                                    sidebar.classList.remove('sidebar-open')
+                                    overlay.classList.remove('show')
+                                    document.body.style.overflow = ''
+                                } else {
+                                    sidebar.classList.add('sidebar-open')
+                                    overlay.classList.add('show')
+                                    document.body.style.overflow = 'hidden'
+                                }
+                            }
+                        })
+                    }
+                }, 1000)
+            })
+
+            // Performance monitoring
+            window.addEventListener('load', () => {
+                if ('performance' in window) {
+                    const perfData = performance.getEntriesByType('navigation')[0]
+                    console.log('📊 App load time:', Math.round(perfData.loadEventEnd - perfData.fetchStart), 'ms')
                 }
             })
-        }
 
-        // PWA Install Prompt
-        let deferredPrompt
-        window.addEventListener('beforeinstallprompt', e => {
-            e.preventDefault()
-            deferredPrompt = e
-            showInstallPrompt()
-        })
-
-        function showInstallPrompt() {
-            const installPrompt = document.getElementById('install-prompt')
-            const installButton = document.getElementById('install-button')
-            const dismissButton = document.getElementById('dismiss-install')
-
-            if (installPrompt && !localStorage.getItem('reli-install-dismissed')) {
-                installPrompt.style.display = 'block'
-
-                installButton.addEventListener('click', async () => {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt()
-                        const { outcome } = await deferredPrompt.userChoice
-
-                        deferredPrompt = null
-                        installPrompt.style.display = 'none'
+            // Error handling - Suppress development warnings
+            window.addEventListener('error', event => {
+                // Filter out common development errors and warnings
+                if (event.error && event.error.message) {
+                    const message = event.error.message.toLowerCase()
+                    if (
+                        message.includes('websocket') ||
+                        message.includes('failed to fetch') ||
+                        message.includes('network error') ||
+                        message.includes('tailwindcss') ||
+                        message.includes('production')
+                    ) {
+                        // Suppress these warnings in production
+                        event.preventDefault()
+                        return
                     }
-                })
+                }
+                console.error('❌ Global error:', event.error)
+            })
 
-                dismissButton.addEventListener('click', () => {
-                    installPrompt.style.display = 'none'
-                    localStorage.setItem('reli-install-dismissed', 'true')
-                })
+            // Suppress TailwindCSS production warnings
+            const originalConsoleWarn = console.warn
+            console.warn = function (...args) {
+                const message = args.join(' ').toLowerCase()
+                if (message.includes('tailwindcss') || message.includes('production')) {
+                    return // Suppress TailwindCSS warnings
+                }
+                originalConsoleWarn.apply(console, args)
             }
-        }
 
-        function showUpdatePrompt() {
-            const updatePrompt = document.getElementById('update-prompt')
-            const updateButton = document.getElementById('update-button')
-
-            if (updatePrompt) {
-                updatePrompt.style.display = 'block'
-
-                updateButton.addEventListener('click', () => {
-                    if (navigator.serviceWorker.controller) {
-                        navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' })
+            window.addEventListener('unhandledrejection', event => {
+                // Filter out common development promise rejections
+                if (event.reason && typeof event.reason === 'string') {
+                    const reason = event.reason.toLowerCase()
+                    if (
+                        reason.includes('websocket') ||
+                        reason.includes('failed to fetch') ||
+                        reason.includes('network error')
+                    ) {
+                        console.warn('Development promise rejection (can be ignored):', event.reason)
+                        event.preventDefault()
+                        return
                     }
-                    window.location.reload()
-                })
-            }
-        }
-
-        // Online/Offline Status
-        function updateOnlineStatus() {
-            const offlineIndicator = document.getElementById('offline-indicator')
-            if (offlineIndicator) {
-                offlineIndicator.style.display = navigator.onLine ? 'none' : 'block'
-            }
-        }
-
-        window.addEventListener('online', updateOnlineStatus)
-        window.addEventListener('offline', updateOnlineStatus)
-        updateOnlineStatus()
-
-        // Simplified loading screen removal
-        function hideLoadingScreen() {
-            const loadingScreen = document.getElementById('loading-screen')
-            if (loadingScreen) {
-                loadingScreen.style.display = 'none'
-                loadingScreen.remove()
-            }
-        }
-
-        // Single trigger to hide loading screen
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(hideLoadingScreen, 500)
-        })
-
-        // Fallback: force hide after 1 second
-        setTimeout(hideLoadingScreen, 1000)
-
-        // Floating Action Button & Mobile Menu
-        document.addEventListener('DOMContentLoaded', () => {
-            // Wait for dashboard to be rendered
-            setTimeout(() => {
-                const fab = document.getElementById('fab-menu')
-                if (fab) {
-                    fab.addEventListener('click', e => {
-                        e.preventDefault()
-                        e.stopPropagation()
-
-                        // Toggle sidebar on mobile
-                        const sidebar = document.querySelector('.sidebar')
-                        const overlay = document.querySelector('#sidebar-overlay')
-
-                        if (sidebar && overlay) {
-                            const isOpen = sidebar.classList.contains('sidebar-open')
-
-                            if (isOpen) {
-                                sidebar.classList.remove('sidebar-open')
-                                overlay.classList.remove('show')
-                                document.body.style.overflow = ''
-                            } else {
-                                sidebar.classList.add('sidebar-open')
-                                overlay.classList.add('show')
-                                document.body.style.overflow = 'hidden'
-                            }
-                        }
-                    })
                 }
-            }, 1000)
-        })
+                console.error('❌ Unhandled promise rejection:', event.reason)
+                event.preventDefault()
+            })
 
-        // Performance monitoring
-        window.addEventListener('load', () => {
-            if ('performance' in window) {
-                const perfData = performance.getEntriesByType('navigation')[0]
-                console.log('📊 App load time:', Math.round(perfData.loadEventEnd - perfData.fetchStart), 'ms')
-            }
-        })
-
-        // Error handling - Suppress development warnings
-        window.addEventListener('error', event => {
-            // Filter out common development errors and warnings
-            if (event.error && event.error.message) {
-                const message = event.error.message.toLowerCase()
-                if (
-                    message.includes('websocket') ||
-                    message.includes('failed to fetch') ||
-                    message.includes('network error') ||
-                    message.includes('tailwindcss') ||
-                    message.includes('production')
-                ) {
-                    // Suppress these warnings in production
-                    event.preventDefault()
-                    return
+            // Keyboard shortcuts
+            document.addEventListener('keydown', e => {
+                // Ctrl/Cmd + S = Save/Calculate
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault()
+                    document.dispatchEvent(new CustomEvent('reli-auto-calculate'))
                 }
-            }
-            console.error('❌ Global error:', event.error)
-        })
 
-        // Suppress TailwindCSS production warnings
-        const originalConsoleWarn = console.warn
-        console.warn = function (...args) {
-            const message = args.join(' ').toLowerCase()
-            if (message.includes('tailwindcss') || message.includes('production')) {
-                return // Suppress TailwindCSS warnings
-            }
-            originalConsoleWarn.apply(console, args)
-        }
-
-        window.addEventListener('unhandledrejection', event => {
-            // Filter out common development promise rejections
-            if (event.reason && typeof event.reason === 'string') {
-                const reason = event.reason.toLowerCase()
-                if (
-                    reason.includes('websocket') ||
-                    reason.includes('failed to fetch') ||
-                    reason.includes('network error')
-                ) {
-                    console.warn('Development promise rejection (can be ignored):', event.reason)
-                    event.preventDefault()
-                    return
+                // Ctrl/Cmd + E = Export
+                if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                    e.preventDefault()
+                    const exportBtn = document.querySelector('.btn-accent')
+                    if (exportBtn) {
+                        exportBtn.click()
+                    }
                 }
-            }
-            console.error('❌ Unhandled promise rejection:', event.reason)
-            event.preventDefault()
-        })
+            })
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', e => {
-            // Ctrl/Cmd + S = Save/Calculate
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault()
-                document.dispatchEvent(new CustomEvent('reli-auto-calculate'))
-            }
-
-            // Ctrl/Cmd + E = Export
-            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
-                e.preventDefault()
-                const exportBtn = document.querySelector('.btn-accent')
-                if (exportBtn) {
-                    exportBtn.click()
-                }
-            }
-        })
-
-        // App initialized successfully
-    </script>
-</body>
-
+            // App initialized successfully
+        </script>
+    </body>
 </html>

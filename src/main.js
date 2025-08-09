@@ -18,11 +18,44 @@ console.log('🚀 Starting RELI Application...')
 
 // Application state management
 let appData = {
+    paymentMode: 'topup', // 'topup' or 'direct'
     platforms: {
-        grab: { topup: 0, sisa: 0, kotor: 0 },
-        maxim: { topup: 0, sisa: 0, kotor: 0 },
-        gojek: { topup: 0, sisa: 0, kotor: 0 },
-        indrive: { topup: 0, sisa: 0, kotor: 0 },
+        grab: {
+            topup: 0,
+            sisa: 0,
+            kotor: 0,
+            cash: 0,
+            transfer: 0,
+            komisi: 0,
+            komisiPercent: 20, // Default komisi 20%
+        },
+        maxim: {
+            topup: 0,
+            sisa: 0,
+            kotor: 0,
+            cash: 0,
+            transfer: 0,
+            komisi: 0,
+            komisiPercent: 20,
+        },
+        gojek: {
+            topup: 0,
+            sisa: 0,
+            kotor: 0,
+            cash: 0,
+            transfer: 0,
+            komisi: 0,
+            komisiPercent: 20,
+        },
+        indrive: {
+            topup: 0,
+            sisa: 0,
+            kotor: 0,
+            cash: 0,
+            transfer: 0,
+            komisi: 0,
+            komisiPercent: 15, // InDrive biasanya lebih rendah
+        },
     },
     fuel: {
         jarak: 0,
@@ -286,17 +319,57 @@ function toggleSidebar() {
 function updatePlatform(platform, field, value) {
     appData.platforms[platform][field] = parseFloat(value) || 0
 
-    // If user inputs kotor directly, use that value
-    if (field === 'kotor') {
-        appData.platforms[platform].kotor = parseFloat(value) || 0
-    } else {
-        // Otherwise calculate from topup - sisa
-        appData.platforms[platform].kotor = appData.platforms[platform].topup - appData.platforms[platform].sisa
+    // Calculate kotor based on payment mode
+    if (appData.paymentMode === 'topup') {
+        // If user inputs kotor directly, use that value
+        if (field === 'kotor') {
+            appData.platforms[platform].kotor = parseFloat(value) || 0
+        } else {
+            // Otherwise calculate from topup - sisa
+            appData.platforms[platform].kotor = appData.platforms[platform].topup - appData.platforms[platform].sisa
+        }
+    } else if (appData.paymentMode === 'direct') {
+        // Calculate from cash + transfer - komisi
+        if (field === 'kotor') {
+            appData.platforms[platform].kotor = parseFloat(value) || 0
+        } else if (field === 'komisiPercent') {
+            // Recalculate komisi when percentage changes
+            const totalBeforeKomisi = appData.platforms[platform].cash + appData.platforms[platform].transfer
+            appData.platforms[platform].komisi = (totalBeforeKomisi * parseFloat(value)) / 100
+            appData.platforms[platform].kotor = totalBeforeKomisi - appData.platforms[platform].komisi
+        } else {
+            // Recalculate when cash or transfer changes
+            const totalBeforeKomisi = appData.platforms[platform].cash + appData.platforms[platform].transfer
+            appData.platforms[platform].komisi = (totalBeforeKomisi * appData.platforms[platform].komisiPercent) / 100
+            appData.platforms[platform].kotor = totalBeforeKomisi - appData.platforms[platform].komisi
+        }
     }
 
     calculateResults()
     updateInputPageResults() // Update results section in real-time
     autoSaveData() // Auto save if enabled
+}
+
+// Function to switch payment mode
+function switchPaymentMode(mode) {
+    appData.paymentMode = mode
+
+    // Reset platform data when switching modes
+    Object.keys(appData.platforms).forEach(platform => {
+        if (mode === 'topup') {
+            appData.platforms[platform].cash = 0
+            appData.platforms[platform].transfer = 0
+            appData.platforms[platform].komisi = 0
+        } else {
+            appData.platforms[platform].topup = 0
+            appData.platforms[platform].sisa = 0
+        }
+        // Keep kotor value if exists
+    })
+
+    calculateResults()
+    renderCurrentView() // Re-render to show new input fields
+    showToast(`Beralih ke mode ${mode === 'topup' ? 'Top-up/Saldo' : 'Cash + Transfer'}`, 'info')
 }
 
 function updateFuel(field, value) {
@@ -396,15 +469,33 @@ function exportToWhatsApp() {
 
 function generateWhatsAppMessage() {
     const today = new Date().toLocaleDateString('id-ID')
+    const modeText = appData.paymentMode === 'topup' ? 'Top-up/Saldo' : 'Cash + Transfer'
+
+    let platformDetails = ''
+    Object.entries(appData.platforms).forEach(([platform, data]) => {
+        if (data.kotor > 0) {
+            const platformName = platform.charAt(0).toUpperCase() + platform.slice(1)
+            if (appData.paymentMode === 'topup') {
+                platformDetails += `• ${platformName}: Rp ${formatCurrency(data.kotor)}\n`
+                if (data.topup > 0 || data.sisa > 0) {
+                    platformDetails += `  (Top-up: ${formatCurrency(data.topup)} - Sisa: ${formatCurrency(data.sisa)})\n`
+                }
+            } else {
+                platformDetails += `• ${platformName}: Rp ${formatCurrency(data.kotor)}\n`
+                if (data.cash > 0 || data.transfer > 0) {
+                    platformDetails += `  Cash: ${formatCurrency(data.cash)} + Transfer: ${formatCurrency(data.transfer)}\n`
+                    platformDetails += `  Komisi ${data.komisiPercent}%: -${formatCurrency(data.komisi)}\n`
+                }
+            }
+        }
+    })
+
     return `*RELI - CATATAN HARIAN DRIVER*
 Tanggal: ${today}
+Mode: ${modeText}
 
 *📱 PENDAPATAN PLATFORM:*
-• Grab: Rp ${formatCurrency(appData.platforms.grab.kotor)}
-• Maxim: Rp ${formatCurrency(appData.platforms.maxim.kotor)}
-• Gojek: Rp ${formatCurrency(appData.platforms.gojek.kotor)}
-• Indrive: Rp ${formatCurrency(appData.platforms.indrive.kotor)}
-*Total Kotor: Rp ${formatCurrency(appData.results.totalKotor)}*
+${platformDetails}*Total Kotor: Rp ${formatCurrency(appData.results.totalKotor)}*
 
 *⛽ DATA BBM:*
 • Jarak: ${appData.fuel.jarak} km
@@ -1145,15 +1236,60 @@ function renderInputData() {
                         </div>
                     </div>
                     
-                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-                        <div class="flex items-start gap-3">
-                            <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <span class="text-white text-xs">💡</span>
+                    <!-- Payment Mode Selector -->
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 mb-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                <span class="text-white text-sm">💳</span>
                             </div>
-                            <div class="text-sm text-blue-800">
-                                <p class="font-semibold mb-1">Tips Input Data:</p>
-                                <p><strong>Metode 1:</strong> Masukkan Top-up dan Sisa saldo untuk perhitungan otomatis</p>
-                                <p><strong>Metode 2:</strong> Langsung masukkan total pendapatan kotor (contoh: 364.700)</p>
+                            <h4 class="text-lg font-semibold text-blue-800">Pilih Model Pembayaran</h4>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="form-control">
+                                <label class="label cursor-pointer justify-start gap-3 p-4 border-2 rounded-lg transition-all ${appData.paymentMode === 'topup' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-blue-300'}">
+                                    <input type="radio" name="paymentMode" value="topup" class="radio radio-primary" 
+                                           ${appData.paymentMode === 'topup' ? 'checked' : ''}
+                                           onchange="switchPaymentMode('topup')">
+                                    <div>
+                                        <div class="font-semibold text-gray-800">Model Top-up/Saldo</div>
+                                        <div class="text-sm text-gray-600">Sistem saldo driver (Grab, Maxim, dll)</div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="form-control">
+                                <label class="label cursor-pointer justify-start gap-3 p-4 border-2 rounded-lg transition-all ${appData.paymentMode === 'direct' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-blue-300'}">
+                                    <input type="radio" name="paymentMode" value="direct" class="radio radio-primary"
+                                           ${appData.paymentMode === 'direct' ? 'checked' : ''}
+                                           onchange="switchPaymentMode('direct')">
+                                    <div>
+                                        <div class="font-semibold text-gray-800">Model Cash + Transfer</div>
+                                        <div class="text-sm text-gray-600">Cash dari penumpang + transfer platform</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <span class="text-white text-xs">💡</span>
+                                </div>
+                                <div class="text-sm text-blue-800">
+                                    <p class="font-semibold mb-1">Tips Input Data:</p>
+                                    ${
+                                        appData.paymentMode === 'topup'
+                                            ? `
+                                        <p><strong>Mode Top-up:</strong> Masukkan jumlah top-up dan sisa saldo, atau langsung input total kotor</p>
+                                        <p><strong>Contoh:</strong> Top-up Rp 500.000, Sisa Rp 135.300 = Kotor Rp 364.700</p>
+                                    `
+                                            : `
+                                        <p><strong>Mode Cash + Transfer:</strong> Input cash dari penumpang dan transfer dari platform</p>
+                                        <p><strong>Komisi otomatis:</strong> Dihitung berdasarkan persentase yang bisa disesuaikan</p>
+                                        <p><strong>Contoh:</strong> Cash Rp 200.000 + Transfer Rp 255.875 - Komisi 20% = Kotor Rp 364.700</p>
+                                    `
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1198,44 +1334,132 @@ function renderInputData() {
                                         <h4 class="text-lg font-semibold ${colors.text}">${platform.charAt(0).toUpperCase() + platform.slice(1)}</h4>
                                     </div>
                                     
-                                    <div class="grid grid-cols-3 gap-4 mb-4">
-                                        <div class="form-control">
-                                            <label class="label">
-                                                <span class="label-text text-xs font-medium text-gray-600">Top-up</span>
-                                            </label>
-                                            <input type="number" 
-                                                   class="input input-bordered input-sm bg-white border-gray-200 focus:border-blue-500 text-right" 
-                                                   placeholder="0"
-                                                   value="${data.topup || ''}"
-                                                   onchange="updatePlatform('${platform}', 'topup', this.value)">
+                                    ${
+                                        appData.paymentMode === 'topup'
+                                            ? `
+                                        <!-- Top-up/Saldo Mode -->
+                                        <div class="grid grid-cols-3 gap-4 mb-4">
+                                            <div class="form-control">
+                                                <label class="label">
+                                                    <span class="label-text text-xs font-medium text-gray-600">Top-up</span>
+                                                </label>
+                                                <input type="number" 
+                                                       class="input input-bordered input-sm bg-white border-gray-200 focus:border-blue-500 text-right" 
+                                                       placeholder="0"
+                                                       value="${data.topup || ''}"
+                                                       onchange="updatePlatform('${platform}', 'topup', this.value)">
+                                            </div>
+                                            <div class="form-control">
+                                                <label class="label">
+                                                    <span class="label-text text-xs font-medium text-gray-600">Sisa</span>
+                                                </label>
+                                                <input type="number" 
+                                                       class="input input-bordered input-sm bg-white border-gray-200 focus:border-blue-500 text-right" 
+                                                       placeholder="0"
+                                                       value="${data.sisa || ''}"
+                                                       onchange="updatePlatform('${platform}', 'sisa', this.value)">
+                                            </div>
+                                            <div class="form-control">
+                                                <label class="label">
+                                                    <span class="label-text text-xs font-medium text-blue-600">Kotor Langsung</span>
+                                                </label>
+                                                <input type="number" 
+                                                       class="input input-bordered input-sm bg-blue-50 border-blue-300 focus:border-blue-500 text-right font-semibold" 
+                                                       placeholder="0"
+                                                       value="${data.kotor || ''}"
+                                                       onchange="updatePlatform('${platform}', 'kotor', this.value)">
+                                            </div>
                                         </div>
-                                        <div class="form-control">
-                                            <label class="label">
-                                                <span class="label-text text-xs font-medium text-gray-600">Sisa</span>
-                                            </label>
-                                            <input type="number" 
-                                                   class="input input-bordered input-sm bg-white border-gray-200 focus:border-blue-500 text-right" 
-                                                   placeholder="0"
-                                                   value="${data.sisa || ''}"
-                                                   onchange="updatePlatform('${platform}', 'sisa', this.value)">
+                                    `
+                                            : `
+                                        <!-- Cash + Transfer Mode -->
+                                        <div class="space-y-4 mb-4">
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div class="form-control">
+                                                    <label class="label">
+                                                        <span class="label-text text-xs font-medium text-gray-600">Cash Penumpang</span>
+                                                    </label>
+                                                    <input type="number" 
+                                                           class="input input-bordered input-sm bg-white border-gray-200 focus:border-green-500 text-right" 
+                                                           placeholder="0"
+                                                           value="${data.cash || ''}"
+                                                           onchange="updatePlatform('${platform}', 'cash', this.value)">
+                                                </div>
+                                                <div class="form-control">
+                                                    <label class="label">
+                                                        <span class="label-text text-xs font-medium text-gray-600">Transfer Platform</span>
+                                                    </label>
+                                                    <input type="number" 
+                                                           class="input input-bordered input-sm bg-white border-gray-200 focus:border-green-500 text-right" 
+                                                           placeholder="0"
+                                                           value="${data.transfer || ''}"
+                                                           onchange="updatePlatform('${platform}', 'transfer', this.value)">
+                                                </div>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div class="form-control">
+                                                    <label class="label">
+                                                        <span class="label-text text-xs font-medium text-orange-600">Komisi %</span>
+                                                    </label>
+                                                    <input type="number" 
+                                                           class="input input-bordered input-sm bg-orange-50 border-orange-200 focus:border-orange-500 text-right" 
+                                                           placeholder="20"
+                                                           min="0" max="100" step="0.1"
+                                                           value="${data.komisiPercent || ''}"
+                                                           onchange="updatePlatform('${platform}', 'komisiPercent', this.value)">
+                                                </div>
+                                                <div class="form-control">
+                                                    <label class="label">
+                                                        <span class="label-text text-xs font-medium text-orange-600">Komisi Rp</span>
+                                                    </label>
+                                                    <input type="number" 
+                                                           class="input input-bordered input-sm bg-orange-50 border-orange-200 text-right" 
+                                                           placeholder="0"
+                                                           value="${data.komisi || ''}"
+                                                           readonly>
+                                                </div>
+                                            </div>
+                                            <div class="form-control">
+                                                <label class="label">
+                                                    <span class="label-text text-xs font-medium text-blue-600">Kotor Langsung</span>
+                                                </label>
+                                                <input type="number" 
+                                                       class="input input-bordered input-sm bg-blue-50 border-blue-300 focus:border-blue-500 text-right font-semibold" 
+                                                       placeholder="0"
+                                                       value="${data.kotor || ''}"
+                                                       onchange="updatePlatform('${platform}', 'kotor', this.value)">
+                                            </div>
                                         </div>
-                                        <div class="form-control">
-                                            <label class="label">
-                                                <span class="label-text text-xs font-medium text-blue-600">Kotor Langsung</span>
-                                            </label>
-                                            <input type="number" 
-                                                   class="input input-bordered input-sm bg-blue-50 border-blue-300 focus:border-blue-500 text-right font-semibold" 
-                                                   placeholder="0"
-                                                   value="${data.kotor || ''}"
-                                                   onchange="updatePlatform('${platform}', 'kotor', this.value)">
-                                        </div>
-                                    </div>
+                                    `
+                                    }
                                     
                                     <div class="bg-white rounded-lg p-3 border border-gray-200">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-sm text-gray-600">Total Kotor:</span>
-                                            <span class="text-lg font-bold ${colors.text} platform-total">Rp ${formatCurrency(data.kotor)}</span>
-                                        </div>
+                                        ${
+                                            appData.paymentMode === 'topup'
+                                                ? `
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-sm text-gray-600">Total Kotor:</span>
+                                                <span class="text-lg font-bold ${colors.text} platform-total">Rp ${formatCurrency(data.kotor)}</span>
+                                            </div>
+                                        `
+                                                : `
+                                            <div class="space-y-2">
+                                                <div class="flex justify-between items-center text-sm">
+                                                    <span class="text-gray-600">Cash + Transfer:</span>
+                                                    <span class="font-semibold">Rp ${formatCurrency((data.cash || 0) + (data.transfer || 0))}</span>
+                                                </div>
+                                                <div class="flex justify-between items-center text-sm">
+                                                    <span class="text-orange-600">Komisi (${data.komisiPercent || 0}%):</span>
+                                                    <span class="font-semibold text-orange-600">- Rp ${formatCurrency(data.komisi || 0)}</span>
+                                                </div>
+                                                <hr class="border-gray-300">
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-sm text-gray-600 font-semibold">Total Kotor:</span>
+                                                    <span class="text-lg font-bold ${colors.text} platform-total">Rp ${formatCurrency(data.kotor)}</span>
+                                                </div>
+                                            </div>
+                                        `
+                                        }
                                     </div>
                                 </div>
                             `

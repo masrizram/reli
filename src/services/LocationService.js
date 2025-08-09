@@ -42,7 +42,7 @@ export class LocationService {
                     longitude: 106.8456,
                     accuracy: 100,
                     timestamp: new Date().toISOString(),
-                    fallback: true
+                    fallback: true,
                 }
                 resolve(this.currentPosition)
                 return
@@ -56,7 +56,7 @@ export class LocationService {
                     longitude: 106.8456,
                     accuracy: 100,
                     timestamp: new Date().toISOString(),
-                    fallback: true
+                    fallback: true,
                 }
                 resolve(this.currentPosition)
                 return
@@ -69,7 +69,7 @@ export class LocationService {
                         longitude: position.coords.longitude,
                         accuracy: position.coords.accuracy,
                         timestamp: new Date().toISOString(),
-                        fallback: false
+                        fallback: false,
                     }
                     resolve(this.currentPosition)
                 },
@@ -81,7 +81,7 @@ export class LocationService {
                         longitude: 106.8456,
                         accuracy: 100,
                         timestamp: new Date().toISOString(),
-                        fallback: true
+                        fallback: true,
                     }
                     resolve(this.currentPosition)
                 },
