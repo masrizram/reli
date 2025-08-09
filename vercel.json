@@ -12,10 +12,6 @@
             "source": "/(.*)",
             "headers": [
                 {
-                    "key": "Permissions-Policy",
-                    "value": "geolocation=*, camera=*, microphone=*, payment=*, usb=*"
-                },
-                {
                     "key": "X-Content-Type-Options",
                     "value": "nosniff"
                 },

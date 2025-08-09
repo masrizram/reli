@@ -43,44 +43,55 @@
         <!-- TailwindCSS + DaisyUI (Local Build) -->
         <link href="/src/styles/tailwind.css" rel="stylesheet" type="text/css" />
         <script>
-            // Suppress development warnings and errors
+            // Comprehensive console suppression for production
             const originalWarn = console.warn
             const originalError = console.error
+            const originalLog = console.log
+
+            // List of patterns to suppress
+            const suppressPatterns = [
+                'tailwindcss',
+                'production',
+                'browsing-topics',
+                'unrecognized feature',
+                'should not be used in production',
+                'cdn.tailwindcss.com',
+                'permission policy',
+                'permissions-policy',
+                'interest-cohort',
+                'run-ad-auction',
+                'join-ad-interest-group',
+                'private-state-token',
+                'private-aggregation',
+                'attribution-reporting',
+                'origin trial controlled',
+                'failed to load resource',
+                'beforeinstallpromptevent',
+                'banner not shown',
+                '404',
+            ]
+
+            function shouldSuppress(args) {
+                const message = args.join(' ').toLowerCase()
+                return suppressPatterns.some(pattern => message.includes(pattern))
+            }
 
             console.warn = function (...args) {
-                const message = args.join(' ').toLowerCase()
-                if (
-                    message.includes('tailwindcss') ||
-                    message.includes('production') ||
-                    message.includes('browsing-topics') ||
-                    message.includes('unrecognized feature') ||
-                    message.includes('should not be used in production') ||
-                    message.includes('cdn.tailwindcss.com')
-                ) {
-                    return
-                }
+                if (shouldSuppress(args)) return
                 originalWarn.apply(console, args)
             }
 
             console.error = function (...args) {
+                if (shouldSuppress(args)) return
+                originalError.apply(console, args)
+            }
+
+            console.log = function (...args) {
                 const message = args.join(' ').toLowerCase()
-                if (
-                    message.includes('permission policy') ||
-                    message.includes('permissions-policy') ||
-                    message.includes('browsing-topics') ||
-                    message.includes('unrecognized feature') ||
-                    message.includes('interest-cohort') ||
-                    message.includes('run-ad-auction') ||
-                    message.includes('join-ad-interest-group') ||
-                    message.includes('private-state-token') ||
-                    message.includes('private-aggregation') ||
-                    message.includes('attribution-reporting') ||
-                    message.includes('failed to load resource') ||
-                    message.includes('404')
-                ) {
+                if (message.includes('banner not shown') || message.includes('beforeinstallpromptevent')) {
                     return
                 }
-                originalError.apply(console, args)
+                originalLog.apply(console, args)
             }
         </script>
 
