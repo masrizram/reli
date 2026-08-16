@@ -9,6 +9,19 @@
 
 import { supabase, isSupabaseConfigured, TABLES } from '../config/supabase.js'
 
+// PostgREST / Supabase error codes that indicate the request was rejected by
+// RLS or because no authenticated session exists. When these surface we want
+// callers to degrade to localStorage rather than crash, and to log a clear,
+// actionable reason.
+const RLS_DENIED_PATTERNS = ['42501', 'PGRST301', 'permission denied', 'row-level security']
+
+function isRlsDenied(error) {
+    if (!error) return false
+    const code = String(error.code || '')
+    const message = String(error.message || '')
+    return RLS_DENIED_PATTERNS.some(p => code === p || message.toLowerCase().includes(p.toLowerCase()))
+}
+
 export class DatabaseService {
     _available() {
         return isSupabaseConfigured && supabase !== null
@@ -35,6 +48,8 @@ export class DatabaseService {
             // Check if record exists, then update or insert.
             // Using upsert would be ideal, but we keep the explicit select+update
             // path so partial-network failures don't silently overwrite fields.
+            // RLS scopes all queries to the authenticated user; without a session
+            // the select returns nothing and the insert is denied by policy.
             const { data: existing, error: selectError } = await supabase
                 .from(TABLES.DAILY_RECORDS)
                 .select('id')
@@ -58,7 +73,14 @@ export class DatabaseService {
 
             return { success: true, data: result.data }
         } catch (error) {
-            console.warn('[RELI] Error saving to database:', error?.message || error)
+            if (isRlsDenied(error)) {
+                console.warn(
+                    '[RELI] Database write denied by RLS (no authenticated session). ' +
+                        'Enable Supabase Auth and sign in to use cloud sync. Falling back to localStorage.'
+                )
+            } else {
+                console.warn('[RELI] Error saving to database:', error?.message || error)
+            }
             return { success: false, error: error?.message || 'Unknown error' }
         }
     }

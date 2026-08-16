@@ -50,10 +50,44 @@ export function createInitialAppData() {
     }
 }
 
-/** Coerce any input into a finite, non-NaN number (default 0). */
+/**
+ * Coerce an input into a finite, non-NaN number (default 0).
+ *
+ * Accepted types (F-08 hardening):
+ *   - number        -> kept as-is when finite
+ *   - numeric string -> parsed (trimming surrounding whitespace); empty
+ *                       string yields 0
+ *   - null/undefined -> 0
+ *
+ * Rejected (returned as 0) so arbitrary data is not silently converted:
+ *   - arrays   (parseFloat([1,2]) would otherwise yield 1)
+ *   - plain objects
+ *   - functions / symbols
+ *   - boolean
+ *   - NaN / ±Infinity
+ *   - malformed numeric strings ("abc", "1.2.3", "12abc")
+ *
+ * This preserves legitimate browser form input behavior (HTML number inputs
+ * deliver strings or empty strings) while refusing to silently coerce
+ * structured data into a plausible-but-wrong number.
+ */
 export function toNumber(value) {
-    const n = typeof value === 'number' ? value : parseFloat(value)
-    return Number.isFinite(n) ? n : 0
+    if (value === null || value === undefined) return 0
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : 0
+    }
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (trimmed === '') return 0
+        // parseFloat accepts leading numbers and ignores trailing garbage;
+        // require the *entire* trimmed string to be a valid numeric literal
+        // so "12abc" is rejected rather than coerced to 12.
+        if (!/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(trimmed)) return 0
+        const n = parseFloat(trimmed)
+        return Number.isFinite(n) ? n : 0
+    }
+    // arrays, plain objects, functions, symbols, booleans -> 0
+    return 0
 }
 
 /**
@@ -68,19 +102,20 @@ export function toNumber(value) {
  */
 export function recomputePlatform(platform, paymentMode) {
     const directKotor = toNumber(platform.kotor)
-    // If the caller is updating `kotor` directly we trust that value and
-    // re-derive komisi for the direct model so the displayed komisi stays
-    // consistent with the kotor value.
     if (paymentMode === 'topup') {
+        // Direct `kotor` input wins when provided; otherwise derive from
+        // topup - sisa. Komisi is NOT meaningful in topup mode and must
+        // always be reset to 0 so a stale value from a previous direct-mode
+        // session cannot leak into totals or the UI (invariant: TOPUP mode
+        // never retains DIRECT-mode commission state).
         platform.kotor = directKotor || toNumber(platform.topup) - toNumber(platform.sisa)
-        // komisi is not meaningful in topup mode; keep it at 0 for clarity.
-        if (!directKotor) {
-            platform.komisi = 0
-        }
+        platform.komisi = 0
         return platform
     }
 
-    // direct mode
+    // direct mode: cash + transfer - komisi, where
+    // komisi = (cash + transfer) * komisiPercent / 100
+    // (direct `kotor` input wins)
     const cash = toNumber(platform.cash)
     const transfer = toNumber(platform.transfer)
     const pct = toNumber(platform.komisiPercent)

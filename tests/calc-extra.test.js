@@ -23,9 +23,11 @@ describe('recomputePlatform — mode-switching consistency', () => {
         expect(p.komisi).toBe(0)
     })
 
-    it('keeps komisi untouched in topup mode when direct kotor is provided', () => {
-        // Documented behavior: topup + direct kotor leaves komisi as-is.
-        const p = { topup: 500000, sisa: 135300, kotor: 400000, komisi: 0, komisiPercent: 20 }
+    it('keeps komisi at 0 in topup mode even when direct kotor is provided', () => {
+        // Fixed behavior (F-05): TOPUP mode never retains a DIRECT-mode
+        // commission value. Even when the user enters a direct kotor, komisi
+        // must be reset to 0 so a stale value cannot leak into totals or UI.
+        const p = { topup: 500000, sisa: 135300, kotor: 400000, komisi: 68231, komisiPercent: 20 }
         recomputePlatform(p, 'topup')
         expect(p.kotor).toBe(400000)
         expect(p.komisi).toBe(0)
@@ -170,18 +172,30 @@ describe('toNumber — defensive coercion (documented behavior)', () => {
     })
     it('returns 0 for plain objects', () => {
         expect(toNumber({})).toBe(0)
+        expect(toNumber({ valueOf: () => 5 })).toBe(0)
     })
-    // NOTE: parseFloat([1,2]) coerces the array to "1,2" and parses "1".
-    // This is a known input-validation weakness (see finding F-08) — arrays
-    // with a numeric first element are NOT rejected. This test documents the
-    // current behavior so a future hardening does not silently change it.
-    it('parses the first element of an array via string coercion (weakness)', () => {
-        expect(toNumber([1, 2])).toBe(1)
+    // F-08 hardening: arrays are no longer silently coerced via string
+    // conversion. parseFloat([1,2]) used to yield 1; now rejected as 0.
+    it('returns 0 for arrays (hardened, no silent coercion)', () => {
+        expect(toNumber([1, 2])).toBe(0)
+        expect(toNumber([42])).toBe(0)
     })
     it('returns 0 for an empty array', () => {
         expect(toNumber([])).toBe(0)
     })
     it('returns 0 for functions', () => {
         expect(toNumber(() => 5)).toBe(0)
+    })
+    it('returns 0 for booleans', () => {
+        expect(toNumber(true)).toBe(0)
+        expect(toNumber(false)).toBe(0)
+    })
+    it('returns 0 for malformed numeric strings with trailing garbage', () => {
+        expect(toNumber('12abc')).toBe(0)
+        expect(toNumber('1.2.3')).toBe(0)
+    })
+    it('accepts scientific notation strings', () => {
+        expect(toNumber('1e3')).toBe(1000)
+        expect(toNumber('1.5e-2')).toBeCloseTo(0.015, 5)
     })
 })

@@ -13,7 +13,7 @@ export default defineConfig({
         exclude: ['tests/build-smoke.test.js'],
         coverage: {
             reporter: ['text', 'html'],
-            include: ['src/utils/calc.js', 'src/services/**/*.js', 'src/utils/storage.js'],
+            include: ['src/utils/calc.js', 'src/services/**/*.js'],
         },
     },
 })

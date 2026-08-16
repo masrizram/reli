@@ -218,6 +218,49 @@ export class AnalyticsService {
 
         return { success: true, data: { trend, change: percentChange, message, slope, intercept: 0 } }
     }
+
+    /**
+     * Normalize a trend result into a shape that is always safe to render.
+     *
+     * Handles every failure mode (F-06):
+     *   - null/undefined trend (failed or absent request)
+     *   - trend missing `change`
+     *   - `change` being null/undefined/NaN
+     *   - trend direction strings from getTrendAnalysis ('increasing' etc.)
+     *
+     * Returns:
+     *   {
+     *     available: boolean,           // false => render fallback UI
+     *     change: number,                // finite number, 0 when unknown
+     *     sign: '+' | '-' | '',          // sign prefix for display
+     *     label: string,                // '12.3%' style, or fallback text
+     *     message: string,               // human message or fallback
+     *     icon: string,                  // '📈' | '📉' | '📊'
+     *   }
+     *
+     * This is a pure function (no I/O) so it can be unit-tested directly.
+     */
+    static normalizeTrend(trendResult) {
+        const trend = trendResult && trendResult.success ? trendResult.data : null
+        if (!trend) {
+            return {
+                available: false,
+                change: 0,
+                sign: '',
+                label: '—',
+                message: 'Data trend belum tersedia',
+                icon: '📊',
+            }
+        }
+        const rawChange = trend.change
+        const change = Number.isFinite(rawChange) ? rawChange : 0
+        const direction = typeof trend.trend === 'string' ? trend.trend : 'stable'
+        const sign = change > 0 ? '+' : ''
+        const label = `${sign}${change.toFixed(1)}%`
+        const icon = direction === 'increasing' ? '📈' : direction === 'decreasing' ? '📉' : '📊'
+        const message = trend.message || (change === 0 ? 'Pendapatan relatif stabil' : 'Menganalisis...')
+        return { available: true, change, sign, label, message, icon }
+    }
 }
 
 // Singleton instance

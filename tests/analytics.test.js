@@ -125,6 +125,44 @@ describe('AnalyticsService.getDailyStats', () => {
     })
 })
 
+describe('F-07: canonical localStorage schema (single source of truth)', () => {
+    beforeEach(() => localStorage.clear())
+    afterEach(() => localStorage.clear())
+
+    it('the app uses a flat reli-data object keyed by date, not a nested daily/_meta structure', async () => {
+        // This is the canonical schema written by main.js (saveToStorage) and
+        // read by AnalyticsService.getAnalyticsData. The obsolete
+        // StorageManager used a divergent {_meta, daily:{}} structure and was
+        // removed; this test locks in the single canonical schema.
+        seedLocalStorage({
+            '2025-01-01': {
+                results: { totalKotor: 100, pendapatanBersih: 50 },
+                platforms: { grab: { kotor: 100 } },
+                fuel: { jarak: 10 },
+                additionalCosts: { total: 0 },
+            },
+            '2025-01-02': {
+                results: { totalKotor: 200, pendapatanBersih: 120 },
+            },
+        })
+        const res = await analyticsService.getAnalyticsData(30)
+        expect(res.success).toBe(true)
+        expect(Object.keys(res.data).sort()).toEqual(['2025-01-01', '2025-01-02'])
+        expect(res.data['2025-01-01'].results.pendapatanBersih).toBe(50)
+    })
+
+    it('a stored _meta key is ignored as non-record metadata, not treated as a daily record', async () => {
+        // Confirms the canonical reader skips non-record metadata keys.
+        seedLocalStorage({ '2025-01-01': { results: { pendapatanBersih: 7 } } })
+        const raw = JSON.parse(localStorage.getItem('reli-data'))
+        raw._meta = { version: '2.0' } // legacy meta from removed StorageManager
+        localStorage.setItem('reli-data', JSON.stringify(raw))
+        const res = await analyticsService.getAnalyticsData(30)
+        expect(res.success).toBe(true)
+        expect(Object.keys(res.data)).toEqual(['2025-01-01'])
+    })
+})
+
 describe('AnalyticsService.getTrendAnalysis', () => {
     beforeEach(() => localStorage.clear())
     afterEach(() => localStorage.clear())

@@ -210,7 +210,6 @@ Project ini menggunakan Atomic Design Pattern:
 
 ### Utils
 
-- **StorageManager**: Local storage management
 - **PWA**: Progressive Web App utilities
 
 ### Architecture Features

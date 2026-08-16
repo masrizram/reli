@@ -5,7 +5,7 @@
 
 import { testConnection } from './config/supabase.js'
 import { databaseService } from './services/DatabaseService.js'
-import { analyticsService } from './services/AnalyticsService.js'
+import { analyticsService, AnalyticsService } from './services/AnalyticsService.js'
 import { optimizerService } from './services/OptimizerService.js'
 import { locationService } from './services/LocationService.js'
 import { Chart, registerables } from 'chart.js'
@@ -1569,7 +1569,10 @@ async function renderAnalytics() {
 
     const summary = summaryResult.success ? summaryResult.data : null
     const dailyStats = dailyResult.success ? dailyResult.data : null
-    const trend = trendResult.success ? trendResult.data : null
+    // F-06: never call .toFixed() on a possibly-undefined trend. Normalize into
+    // a guaranteed-safe render shape so a null/failed trend shows a fallback
+    // instead of throwing a TypeError.
+    const trend = AnalyticsService.normalizeTrend(trendResult)
 
     return `
         <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="flex-1">
@@ -1676,15 +1679,15 @@ async function renderAnalytics() {
                         <div class="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-2xl p-6">
                             <div class="flex items-center gap-3 mb-4">
                                 <div class="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center">
-                                    <span class="text-white text-sm">${trend?.trend === 'increasing' ? '📈' : trend?.trend === 'decreasing' ? '📉' : '📊'}</span>
+                                    <span class="text-white text-sm">${trend.icon}</span>
                                 </div>
                                 <div>
                                     <div class="text-sm font-medium text-purple-700">Trend</div>
                                     <div class="text-xs text-purple-600">14 hari terakhir</div>
                                 </div>
                             </div>
-                            <div class="text-2xl font-bold text-purple-700">${trend?.change > 0 ? '+' : ''}${trend?.change.toFixed(1)}%</div>
-                            <div class="text-sm text-purple-600 mt-1">${trend?.message || 'Menganalisis...'}</div>
+                            <div class="text-2xl font-bold text-purple-700">${trend.label}</div>
+                            <div class="text-sm text-purple-600 mt-1">${trend.message}</div>
                         </div>
                     </div>
 
