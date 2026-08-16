@@ -5,6 +5,7 @@ bun.lock
 # Build outputs
 dist/
 build/
+coverage/
 
 # Environment files
 .env

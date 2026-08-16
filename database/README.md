@@ -10,9 +10,14 @@
 
 ### 2. Connection Details
 
-- **Project URL**: https://jgkgrjkjpokofgyroxvr.supabase.co
-- **API Key**: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impna2dyamtqcG9rb2ZneXJveHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0NTk5ODYsImV4cCI6MjA3MDAzNTk4Nn0.OFXaPpJv_YJVU7FTfjfz9elOD7_IBq9oJHPnwz2p6dY
-- **Password**: JQMVPGRRjPe30rmA
+> **WARNING**: Never commit real database credentials to source control.
+> Supabase URL and anon key are injected at build time from environment
+> variables (see `.env.example`). The database password must be stored only
+> in your secret manager / hosting provider's environment variables.
+
+- **Project URL**: set via `VITE_SUPABASE_URL`
+- **Anon Key**: set via `VITE_SUPABASE_ANON_KEY` (public anon key, safe for client use under RLS)
+- **Database Password**: stored only in the Supabase dashboard / secret manager — never in this repo.
 
 ### 3. Table Structure
 

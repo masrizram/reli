@@ -1,25 +1,33 @@
 /**
  * Analytics Service
- * Handles data analysis and statistics for RELI application
+ * Aggregates daily records into summary/trend statistics for RELI.
+ *
+ * Reads from Supabase when configured and online, otherwise falls back to
+ * localStorage. Never throws — callers receive `{ success, data | error }`.
  */
 
 import { databaseService } from './DatabaseService.js'
+import { isSupabaseConfigured } from '../config/supabase.js'
 
 export class AnalyticsService {
+    _canUseDatabase() {
+        return isSupabaseConfigured && typeof navigator !== 'undefined' && navigator.onLine
+    }
+
     /**
-     * Get analytics data from storage
+     * Gather raw daily data for the last `days` days.
      */
     async getAnalyticsData(days = 30) {
         try {
             let data = {}
 
-            // Try to get data from database first
-            if (window.useDatabase && window.isOnline) {
+            if (this._canUseDatabase()) {
                 const dbResult = await databaseService.getAllDailyRecords(days)
-                if (dbResult.success) {
-                    // Convert database format to analytics format
+                if (dbResult.success && dbResult.data) {
                     dbResult.data.forEach(record => {
-                        data[record.date] = {
+                        // record.date may come back as an ISO string; normalize to YYYY-MM-DD.
+                        const key = String(record.date).slice(0, 10)
+                        data[key] = {
                             platforms: record.platforms,
                             fuel: record.fuel,
                             additionalCosts: record.additional_costs,
@@ -30,27 +38,35 @@ export class AnalyticsService {
                 }
             }
 
-            // Fallback to localStorage if no database data
+            // Fallback / merge with localStorage so partial DB data doesn't hide local days.
             if (Object.keys(data).length === 0) {
-                data = JSON.parse(localStorage.getItem('reli-data') || '{}')
+                const local = JSON.parse(localStorage.getItem('reli-data') || '{}')
+                for (const [k, v] of Object.entries(local)) {
+                    if (k === '_meta' || !v || typeof v !== 'object' || !v.results) continue
+                    data[k] = v
+                }
             }
 
             return { success: true, data }
         } catch (error) {
-            console.error('Error getting analytics data:', error)
-            return { success: false, error: error.message }
+            console.warn('[RELI] Error getting analytics data:', error?.message || error)
+            return { success: false, error: error?.message || 'Unknown error' }
         }
     }
 
     /**
-     * Calculate daily statistics
+     * Daily time-series stats (last `days` entries with data).
      */
     async getDailyStats(days = 7) {
         const result = await this.getAnalyticsData(days)
         if (!result.success) return result
 
         const data = result.data
-        const dates = Object.keys(data).sort().slice(-days)
+        // Sort by date ascending and take the last `days` entries that have results.
+        const dates = Object.keys(data)
+            .filter(d => data[d]?.results)
+            .sort()
+            .slice(-days)
 
         const stats = {
             dates: [],
@@ -58,35 +74,22 @@ export class AnalyticsService {
             biayaBBM: [],
             biayaTambahan: [],
             pendapatanBersih: [],
-            platforms: {
-                grab: [],
-                maxim: [],
-                gojek: [],
-                indrive: [],
-            },
+            platforms: { grab: [], maxim: [], gojek: [], indrive: [] },
         }
 
         dates.forEach(date => {
             const dayData = data[date]
-            if (dayData && dayData.results) {
-                stats.dates.push(
-                    new Date(date).toLocaleDateString('id-ID', {
-                        day: '2-digit',
-                        month: 'short',
-                    })
-                )
-                stats.totalKotor.push(dayData.results.totalKotor || 0)
-                stats.biayaBBM.push(dayData.results.biayaBBM || 0)
-                stats.biayaTambahan.push(dayData.results.totalAdditionalCosts || 0)
-                stats.pendapatanBersih.push(dayData.results.pendapatanBersih || 0)
-
-                // Platform breakdown
-                if (dayData.platforms) {
-                    stats.platforms.grab.push(dayData.platforms.grab?.kotor || 0)
-                    stats.platforms.maxim.push(dayData.platforms.maxim?.kotor || 0)
-                    stats.platforms.gojek.push(dayData.platforms.gojek?.kotor || 0)
-                    stats.platforms.indrive.push(dayData.platforms.indrive?.kotor || 0)
-                }
+            if (!dayData?.results) return
+            stats.dates.push(new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }))
+            stats.totalKotor.push(dayData.results.totalKotor || 0)
+            stats.biayaBBM.push(dayData.results.biayaBBM || 0)
+            stats.biayaTambahan.push(dayData.results.totalAdditionalCosts || 0)
+            stats.pendapatanBersih.push(dayData.results.pendapatanBersih || 0)
+            if (dayData.platforms) {
+                stats.platforms.grab.push(dayData.platforms.grab?.kotor || 0)
+                stats.platforms.maxim.push(dayData.platforms.maxim?.kotor || 0)
+                stats.platforms.gojek.push(dayData.platforms.gojek?.kotor || 0)
+                stats.platforms.indrive.push(dayData.platforms.indrive?.kotor || 0)
             }
         })
 
@@ -94,7 +97,7 @@ export class AnalyticsService {
     }
 
     /**
-     * Calculate summary statistics
+     * Summary statistics over the last `days` days.
      */
     async getSummaryStats(days = 30) {
         const result = await this.getAnalyticsData(days)
@@ -102,7 +105,8 @@ export class AnalyticsService {
 
         const data = result.data
         const entries = Object.entries(data)
-            .filter(([date, dayData]) => dayData.results)
+            .filter(([, dayData]) => dayData?.results)
+            .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
             .slice(-days)
 
         if (entries.length === 0) {
@@ -119,38 +123,32 @@ export class AnalyticsService {
                     totalDistance: 0,
                     totalFuel: 0,
                     averageFuelConsumption: 0,
-                    platformBreakdown: {
-                        grab: 0,
-                        maxim: 0,
-                        gojek: 0,
-                        indrive: 0,
-                    },
+                    platformBreakdown: { grab: 0, maxim: 0, gojek: 0, indrive: 0 },
                 },
             }
         }
 
-        const earnings = entries.map(([date, data]) => ({
+        const earnings = entries.map(([date, d]) => ({
             date,
-            earnings: data.results.pendapatanBersih || 0,
-            expenses: (data.results.biayaBBM || 0) + (data.results.totalAdditionalCosts || 0),
-            distance: data.fuel?.jarak || 0,
-            fuel: data.fuel?.literTerpakai || 0,
+            earnings: d.results.pendapatanBersih || 0,
+            expenses: (d.results.biayaBBM || 0) + (d.results.totalAdditionalCosts || 0),
+            distance: d.fuel?.jarak || 0,
+            fuel: d.fuel?.literTerpakai || 0,
         }))
 
-        const totalEarnings = earnings.reduce((sum, day) => sum + day.earnings, 0)
-        const totalExpenses = earnings.reduce((sum, day) => sum + day.expenses, 0)
-        const totalDistance = earnings.reduce((sum, day) => sum + day.distance, 0)
-        const totalFuel = earnings.reduce((sum, day) => sum + day.fuel, 0)
+        const totalEarnings = earnings.reduce((s, d) => s + d.earnings, 0)
+        const totalExpenses = earnings.reduce((s, d) => s + d.expenses, 0)
+        const totalDistance = earnings.reduce((s, d) => s + d.distance, 0)
+        const totalFuel = earnings.reduce((s, d) => s + d.fuel, 0)
 
-        const sortedByEarnings = earnings.sort((a, b) => b.earnings - a.earnings)
+        const sortedByEarnings = [...earnings].sort((a, b) => b.earnings - a.earnings)
 
-        // Platform breakdown
         const platformTotals = { grab: 0, maxim: 0, gojek: 0, indrive: 0 }
-        entries.forEach(([date, dayData]) => {
+        entries.forEach(([, dayData]) => {
             if (dayData.platforms) {
-                Object.keys(platformTotals).forEach(platform => {
-                    platformTotals[platform] += dayData.platforms[platform]?.kotor || 0
-                })
+                for (const p of Object.keys(platformTotals)) {
+                    platformTotals[p] += dayData.platforms[p]?.kotor || 0
+                }
             }
         })
 
@@ -164,7 +162,7 @@ export class AnalyticsService {
             worstDay: sortedByEarnings[sortedByEarnings.length - 1],
             totalDistance,
             totalFuel,
-            averageFuelConsumption: totalDistance > 0 ? totalDistance / totalFuel : 0,
+            averageFuelConsumption: totalDistance > 0 && totalFuel > 0 ? totalDistance / totalFuel : 0,
             platformBreakdown: platformTotals,
         }
 
@@ -172,7 +170,7 @@ export class AnalyticsService {
     }
 
     /**
-     * Get trend analysis
+     * Trend analysis via simple linear regression + half-period comparison.
      */
     async getTrendAnalysis(days = 14) {
         const result = await this.getDailyStats(days)
@@ -188,25 +186,22 @@ export class AnalyticsService {
             }
         }
 
-        // Calculate trend using simple linear regression
         const n = earnings.length
         const x = Array.from({ length: n }, (_, i) => i)
-        const y = earnings
-
         const sumX = x.reduce((a, b) => a + b, 0)
-        const sumY = y.reduce((a, b) => a + b, 0)
-        const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0)
+        const sumY = earnings.reduce((a, b) => a + b, 0)
+        const sumXY = x.reduce((sum, xi, i) => sum + xi * earnings[i], 0)
         const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0)
 
-        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX)
-        const intercept = (sumY - slope * sumX) / n
+        const denom = n * sumXX - sumX * sumX
+        const slope = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0
 
-        // Calculate percentage change from first to last
-        const firstWeek = earnings.slice(0, Math.floor(n / 2))
-        const lastWeek = earnings.slice(Math.floor(n / 2))
+        const half = Math.floor(n / 2)
+        const firstHalf = earnings.slice(0, half)
+        const lastHalf = earnings.slice(half)
 
-        const firstAvg = firstWeek.reduce((a, b) => a + b, 0) / firstWeek.length
-        const lastAvg = lastWeek.reduce((a, b) => a + b, 0) / lastWeek.length
+        const firstAvg = firstHalf.length ? firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length : 0
+        const lastAvg = lastHalf.length ? lastHalf.reduce((a, b) => a + b, 0) / lastHalf.length : 0
 
         const percentChange = firstAvg > 0 ? ((lastAvg - firstAvg) / firstAvg) * 100 : 0
 
@@ -221,18 +216,9 @@ export class AnalyticsService {
             message = `Pendapatan menurun ${Math.abs(percentChange).toFixed(1)}% dalam periode ini`
         }
 
-        return {
-            success: true,
-            data: {
-                trend,
-                change: percentChange,
-                message,
-                slope,
-                intercept,
-            },
-        }
+        return { success: true, data: { trend, change: percentChange, message, slope, intercept: 0 } }
     }
 }
 
-// Create singleton instance
+// Singleton instance
 export const analyticsService = new AnalyticsService()

@@ -9,6 +9,15 @@ import { analyticsService } from './services/AnalyticsService.js'
 import { optimizerService } from './services/OptimizerService.js'
 import { locationService } from './services/LocationService.js'
 import { Chart, registerables } from 'chart.js'
+import {
+    createInitialAppData,
+    calculateResults as engineCalculateResults,
+    recomputePlatform,
+    recomputeFuel,
+    recomputeAdditionalCosts,
+    formatCurrency as engineFormatCurrency,
+    toNumber,
+} from './utils/calc.js'
 import './utils/SampleDataGenerator.js'
 
 // Register Chart.js components
@@ -16,69 +25,9 @@ Chart.register(...registerables)
 
 // console.log('🚀 Starting RELI Application...')
 
-// Application state management
-let appData = {
-    paymentMode: 'topup', // 'topup' or 'direct'
-    platforms: {
-        grab: {
-            topup: 0,
-            sisa: 0,
-            kotor: 0,
-            cash: 0,
-            transfer: 0,
-            komisi: 0,
-            komisiPercent: 20, // Default komisi 20%
-        },
-        maxim: {
-            topup: 0,
-            sisa: 0,
-            kotor: 0,
-            cash: 0,
-            transfer: 0,
-            komisi: 0,
-            komisiPercent: 20,
-        },
-        gojek: {
-            topup: 0,
-            sisa: 0,
-            kotor: 0,
-            cash: 0,
-            transfer: 0,
-            komisi: 0,
-            komisiPercent: 20,
-        },
-        indrive: {
-            topup: 0,
-            sisa: 0,
-            kotor: 0,
-            cash: 0,
-            transfer: 0,
-            komisi: 0,
-            komisiPercent: 15, // InDrive biasanya lebih rendah
-        },
-    },
-    fuel: {
-        jarak: 0,
-        konsumsi: 14,
-        harga: 10000,
-        literTerpakai: 0,
-        biayaBBM: 0,
-    },
-    additionalCosts: {
-        parkir: 0,
-        makan: 0,
-        kuota: 0,
-        tol: 0,
-        lainnya: 0,
-        total: 0,
-    },
-    results: {
-        totalKotor: 0,
-        biayaBBM: 0,
-        totalAdditionalCosts: 0,
-        pendapatanBersih: 0,
-    },
-}
+// Application state management — sourced from the shared calculation engine
+// so the business rules live in exactly one (testable) place.
+let appData = createInitialAppData()
 
 let currentView = 'dashboard'
 let isOnline = navigator.onLine
@@ -87,10 +36,12 @@ let autoSave = true
 
 // Utility functions
 function formatCurrency(amount) {
-    return new Intl.NumberFormat('id-ID').format(Math.round(amount || 0))
+    return engineFormatCurrency(amount)
 }
 
 function showToast(message, type = 'info') {
+    // Escape: message is inserted via textContent (not innerHTML) to prevent
+    // any XSS from a message that might contain user-derived content.
     const toast = document.createElement('div')
     toast.className = 'toast toast-top toast-end z-50'
 
@@ -101,11 +52,12 @@ function showToast(message, type = 'info') {
         info: 'alert-info',
     }
 
-    toast.innerHTML = `
-        <div class="alert ${alertTypes[type] || 'alert-info'}">
-            <span>${message}</span>
-        </div>
-    `
+    const alert = document.createElement('div')
+    alert.className = `alert ${alertTypes[type] || 'alert-info'}`
+    const span = document.createElement('span')
+    span.textContent = String(message)
+    alert.appendChild(span)
+    toast.appendChild(alert)
 
     document.body.appendChild(toast)
     setTimeout(() => {
@@ -115,34 +67,10 @@ function showToast(message, type = 'info') {
     }, 3000)
 }
 
-// Calculate results
+// Calculate results — delegates to the shared, tested calculation engine.
 function calculateResults() {
     try {
-        // Calculate platform totals
-        appData.results.totalKotor = Object.values(appData.platforms).reduce(
-            (sum, platform) => sum + (platform.kotor || 0),
-            0
-        )
-
-        // Calculate fuel costs
-        if (appData.fuel.jarak > 0 && appData.fuel.konsumsi > 0) {
-            appData.fuel.literTerpakai = appData.fuel.jarak / appData.fuel.konsumsi
-            appData.fuel.biayaBBM = appData.fuel.literTerpakai * appData.fuel.harga
-        }
-
-        appData.results.biayaBBM = Math.round(appData.fuel.biayaBBM || 0)
-
-        // Calculate additional costs total
-        appData.additionalCosts.total = Object.entries(appData.additionalCosts)
-            .filter(([key]) => key !== 'total')
-            .reduce((sum, [, value]) => sum + (value || 0), 0)
-
-        appData.results.totalAdditionalCosts = appData.additionalCosts.total
-
-        // Calculate net earnings
-        appData.results.pendapatanBersih =
-            appData.results.totalKotor - appData.results.biayaBBM - appData.results.totalAdditionalCosts
-
+        engineCalculateResults(appData)
         // Update UI
         updateStatsDisplay()
     } catch (error) {
@@ -317,33 +245,11 @@ function toggleSidebar() {
 
 // Update functions for input
 function updatePlatform(platform, field, value) {
-    appData.platforms[platform][field] = parseFloat(value) || 0
-
-    // Calculate kotor based on payment mode
-    if (appData.paymentMode === 'topup') {
-        // If user inputs kotor directly, use that value
-        if (field === 'kotor') {
-            appData.platforms[platform].kotor = parseFloat(value) || 0
-        } else {
-            // Otherwise calculate from topup - sisa
-            appData.platforms[platform].kotor = appData.platforms[platform].topup - appData.platforms[platform].sisa
-        }
-    } else if (appData.paymentMode === 'direct') {
-        // Calculate from cash + transfer - komisi
-        if (field === 'kotor') {
-            appData.platforms[platform].kotor = parseFloat(value) || 0
-        } else if (field === 'komisiPercent') {
-            // Recalculate komisi when percentage changes
-            const totalBeforeKomisi = appData.platforms[platform].cash + appData.platforms[platform].transfer
-            appData.platforms[platform].komisi = (totalBeforeKomisi * parseFloat(value)) / 100
-            appData.platforms[platform].kotor = totalBeforeKomisi - appData.platforms[platform].komisi
-        } else {
-            // Recalculate when cash or transfer changes
-            const totalBeforeKomisi = appData.platforms[platform].cash + appData.platforms[platform].transfer
-            appData.platforms[platform].komisi = (totalBeforeKomisi * appData.platforms[platform].komisiPercent) / 100
-            appData.platforms[platform].kotor = totalBeforeKomisi - appData.platforms[platform].komisi
-        }
-    }
+    const p = appData.platforms[platform]
+    if (!p) return
+    p[field] = toNumber(value)
+    // Recompute derived fields (kotor / komisi) using the shared engine.
+    recomputePlatform(p, appData.paymentMode)
 
     calculateResults()
     updateInputPageResults() // Update results section in real-time
@@ -373,14 +279,16 @@ function switchPaymentMode(mode) {
 }
 
 function updateFuel(field, value) {
-    appData.fuel[field] = parseFloat(value) || 0
+    appData.fuel[field] = toNumber(value)
+    recomputeFuel(appData.fuel)
     calculateResults()
     updateInputPageResults() // Update results section in real-time
     autoSaveData() // Auto save if enabled
 }
 
 function updateAdditionalCost(field, value) {
-    appData.additionalCosts[field] = parseFloat(value) || 0
+    appData.additionalCosts[field] = toNumber(value)
+    recomputeAdditionalCosts(appData.additionalCosts)
     calculateResults()
     updateInputPageResults() // Update results section in real-time
     autoSaveData() // Auto save if enabled
@@ -2718,16 +2626,18 @@ async function initApp() {
             loadingScreen.style.display = 'none'
         }
 
-        // Show error message
+        // Show error message — use textContent for the message to avoid XSS
+        // from an error message that might contain markup.
         const appElement = document.getElementById('app')
         if (appElement) {
+            const safeMessage = (error?.message || 'Unknown error').toString()
             appElement.innerHTML = `
                 <div class="bg-base-200" style="flex-1 flex items-center justify-center p-4">
                     <div class="card bg-base-100 shadow-xl max-w-md w-full">
                         <div class="card-body text-center">
                             <div class="text-6xl mb-4">❌</div>
                             <h2 class="card-title justify-center text-2xl mb-4">Error</h2>
-                            <p class="text-base-content/60 mb-6">Gagal memuat aplikasi: ${error.message}</p>
+                            <p class="text-base-content/60 mb-6" id="init-error-message">Gagal memuat aplikasi.</p>
                             <button class="btn btn-primary" onclick="window.location.reload()">
                                 🔄 Refresh
                             </button>
@@ -2735,6 +2645,8 @@ async function initApp() {
                     </div>
                 </div>
             `
+            const msgEl = document.getElementById('init-error-message')
+            if (msgEl) msgEl.textContent = `Gagal memuat aplikasi: ${safeMessage}`
         }
     }
 }
@@ -2754,12 +2666,9 @@ window.addEventListener('offline', () => {
 
 // Location event listeners
 window.addEventListener('locationUpdate', event => {
-    const locationData = event.detail
-    console.log('Location updated:', locationData)
-
-    // Auto-refresh location view if active
+    // Refresh location view if active (debounced). Avoid logging raw
+    // coordinates to the console for privacy.
     if (currentView === 'location') {
-        // Debounce the refresh to avoid too many updates
         clearTimeout(window.locationRefreshTimeout)
         window.locationRefreshTimeout = setTimeout(async () => {
             await renderCurrentView()
@@ -2769,8 +2678,8 @@ window.addEventListener('locationUpdate', event => {
 
 window.addEventListener('locationError', event => {
     const error = event.detail
-    console.error('Location error:', error)
-    showToast(error.message || 'Error tracking lokasi', 'error')
+    console.warn('[RELI] Location error:', error?.message || 'tracking error')
+    showToast(error?.message || 'Error tracking lokasi', 'error')
 
     // Refresh location view to update tracking status
     if (currentView === 'location') {
