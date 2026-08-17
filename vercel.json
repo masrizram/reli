@@ -25,11 +25,5 @@
                 }
             ]
         }
-    ],
-    "rewrites": [
-        {
-            "source": "/manifest.json",
-            "destination": "/public/manifest.json"
-        }
     ]
 }
