@@ -182,43 +182,21 @@ Pendapatan Bersih = Rp 387.494 - Rp 80.000 - Rp 40.000 = Rp 267.494
 
 ## 📝 Development
 
-Project ini menggunakan Atomic Design Pattern:
+### Architecture
 
-### Atoms (Basic Components)
-
-- **Button**: Reusable button component
-- **Input**: Form input dengan validation
-- **Label**: Text label dengan icon support
-
-### Molecules (Feature Components)
-
-- **PlatformInput**: Input untuk setiap platform (Grab, Maxim, dll)
-- **FuelInput**: Input data BBM dengan auto-calculation
-- **AdditionalCosts**: Input biaya tambahan (parkir, makan, dll)
-- **AnalyticsDashboard**: Dashboard analytics dengan charts
-- **SmartNotifications**: Sistem notifikasi cerdas
-- **LocationFeatures**: GPS tracking dan location services
-- **AdvancedAnalytics**: AI-powered analytics dan insights
-- **EarningsOptimizer**: AI optimizer untuk maksimalkan pendapatan
-- **AutomationHub**: Automation management system
-- **Sidebar**: Navigation sidebar dengan quick actions
-
-### Organisms (Main Components)
-
-- **App**: Main application component (legacy)
-- **Dashboard**: New dashboard dengan sidebar navigation
-
-### Utils
-
-- **PWA**: Progressive Web App utilities
+- **Entry point**: `src/main.js` — view rendering, state, and routing
+- **Services** (`src/services/`): `AnalyticsService`, `DatabaseService`, `OptimizerService`, `LocationService`
+- **Utils** (`src/utils/`): `calc.js` (pure calculation engine), `export.js` (CSV generation), `debounce.js`
+- **Config** (`src/config/`): `supabase.js` (Supabase client setup)
+- **Database schema**: `database/schema.sql`
 
 ### Architecture Features
 
-- **Modular Design**: Setiap component independent
-- **Event-Driven**: Custom events untuk inter-component communication
+- **Pure calculation engine**: `calc.js` is fully unit-tested without a DOM
+- **Hybrid storage**: localStorage-first with optional Supabase cloud sync
+- **Offline support**: PWA with service worker (app shell caching)
 - **Responsive**: Mobile-first design approach
-- **PWA Ready**: Service worker dan manifest
-- **Performance**: Lazy loading dan optimization
+- **Event-Driven**: Custom events for location updates
 
 ## 🚀 Deployment
 

@@ -17,8 +17,12 @@ import {
     recomputeAdditionalCosts,
     formatCurrency as engineFormatCurrency,
     toNumber,
+    DEFAULT_KONSUMSI,
+    DEFAULT_HARGA,
 } from './utils/calc.js'
-import './utils/SampleDataGenerator.js'
+import { buildCSV } from './utils/export.js'
+import { debounce } from './utils/debounce.js'
+import { hasSavedRecords, resolveFuelDefault } from './utils/records.js'
 
 // Register Chart.js components
 Chart.register(...registerables)
@@ -97,6 +101,10 @@ function updateStatsDisplay() {
 
 // Storage functions
 async function saveToStorage(date = null, showMessage = true) {
+    // Explicit save: flush any pending debounced auto-save so the latest state
+    // is persisted immediately and no delayed duplicate save fires afterward.
+    // (D2: debounce + explicit-save coordination.)
+    debouncedAutoSave.flush()
     try {
         const targetDate = date || new Date().toISOString().split('T')[0]
 
@@ -184,6 +192,29 @@ async function loadFromStorage(date = null, showMessage = false) {
         if (dataLoaded) {
             calculateResults()
         } else {
+            // D1: No saved record for this date — pre-fill fuel konsumsi/harga
+            // from the most recent valid record so the driver doesn't re-enter
+            // values that rarely change. Explicit current-day values (already
+            // in appData.fuel) take precedence; history inherits only when the
+            // current value is not a finite >0 number. Engine defaults remain
+            // the final fallback (calc.js constants are NOT modified).
+            const stored = localStorage.getItem('reli-data') || '{}'
+            appData.fuel.konsumsi = resolveFuelDefault({
+                stored,
+                field: 'konsumsi',
+                currentValue: appData.fuel.konsumsi,
+                engineDefault: DEFAULT_KONSUMSI,
+            })
+            appData.fuel.harga = resolveFuelDefault({
+                stored,
+                field: 'harga',
+                currentValue: appData.fuel.harga,
+                engineDefault: DEFAULT_HARGA,
+            })
+            // Recompute derived fuel fields (literTerpakai, biayaBBM) from the
+            // resolved konsumsi/harga so the input page shows consistent values.
+            recomputeFuel(appData.fuel)
+            calculateResults()
             if (showMessage) {
                 showToast(`Tidak ada data untuk ${targetDate}`, 'warning')
             }
@@ -436,9 +467,15 @@ async function exportToCSV() {
         if (useDatabase && isOnline) {
             const dbResult = await databaseService.getAllDailyRecords()
             if (dbResult.success) {
-                // Convert database format to local format
+                // Convert database format to the canonical records map. Capture
+                // the full record (platforms/fuel/additionalCosts/results) so
+                // buildCSV can emit the per-platform breakdown.
                 dbResult.data.forEach(record => {
-                    data[record.date] = {
+                    const key = String(record.date).slice(0, 10)
+                    data[key] = {
+                        platforms: record.platforms,
+                        fuel: record.fuel,
+                        additionalCosts: record.additional_costs,
                         results: record.results,
                     }
                 })
@@ -450,19 +487,8 @@ async function exportToCSV() {
             data = JSON.parse(localStorage.getItem('reli-data') || '{}')
         }
 
-        const headers = ['Tanggal', 'Total Kotor', 'Biaya BBM', 'Biaya Tambahan', 'Pendapatan Bersih']
-
-        let csv = headers.join(',') + '\n'
-        Object.entries(data).forEach(([date, dayData]) => {
-            const row = [
-                date,
-                dayData.results?.totalKotor || 0,
-                dayData.results?.biayaBBM || 0,
-                dayData.results?.totalAdditionalCosts || 0,
-                dayData.results?.pendapatanBersih || 0,
-            ]
-            csv += row.join(',') + '\n'
-        })
+        // Delegate CSV generation to the pure, tested utility.
+        const csv = buildCSV(data)
 
         const blob = new Blob([csv], { type: 'text/csv' })
         const url = URL.createObjectURL(blob)
@@ -516,12 +542,29 @@ function toggleAutoSave() {
     localStorage.setItem('reli-auto-save', autoSave.toString())
 }
 
-// Auto save function (called after each input change)
-async function autoSaveData() {
+// Core auto-save logic (un-debounced). Performs the actual persistence.
+// Wrapped by `debouncedAutoSave` below so rapid input changes collapse into
+// a single write (D2). Reads the current date from the DOM at call time so
+// the latest selected date is always used.
+async function performAutoSave() {
     if (!autoSave) return
 
     const currentDate = document.getElementById('date-selector')?.value || new Date().toISOString().split('T')[0]
     await saveToStorage(currentDate, false) // Save without showing toast
+}
+
+// Debounced auto-save: rapid field changes produce a single save ~500ms after
+// the last change. The latest state is always persisted (debounce captures
+// the most recent invocation). Explicit "Simpan Data" calls saveToStorage
+// directly and also flushes this debounce to avoid a duplicate delayed save.
+const AUTO_SAVE_DELAY_MS = 500
+const debouncedAutoSave = debounce(performAutoSave, AUTO_SAVE_DELAY_MS)
+
+// Auto save entry point (called after each input change).
+// Scheduled via the debounce so repeated edits don't write on every keystroke.
+function autoSaveData() {
+    if (!autoSave) return
+    debouncedAutoSave()
 }
 
 // Refresh optimizer recommendations
@@ -842,40 +885,79 @@ function renderDashboard() {
 
             <!-- Main Content -->
             <div class="p-6">
-                <!-- Header Section -->
-                <div class="mb-8">
-                    <div class="flex items-center gap-4 mb-6">
-                        <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                            <span class="text-white text-2xl">📊</span>
-                        </div>
-                        <div>
-                            <h1 class="text-3xl font-bold text-gray-800">Dashboard RELI</h1>
-                            <p class="text-gray-600">Rangkuman Earnings Lintas-Industri untuk Driver Ojol</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Welcome Card -->
-                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-8 text-white shadow-xl">
-                        <div class="text-center">
-                            <h2 class="text-2xl lg:text-3xl font-bold mb-3">Selamat Datang di RELI</h2>
-                            <p class="text-lg opacity-90 mb-6">Dashboard AI-powered untuk mengoptimalkan pendapatan driver ojol</p>
-                            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                                <button class="btn btn-white btn-lg gap-2 shadow-lg hover:shadow-xl transition-all" onclick="navigateTo('input')">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                    Input Data Hari Ini
-                                </button>
-                                <button class="btn btn-outline btn-white btn-lg gap-2 hover:bg-white hover:text-blue-600 transition-all" onclick="navigateTo('analytics')">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                    </svg>
-                                    Lihat Analytics
-                                </button>
+                ${
+                    !hasSavedRecords(localStorage)
+                        ? `
+                    <!-- G1: First-launch onboarding empty state -->
+                    <div class="mb-8">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                <span class="text-white text-2xl">📊</span>
+                            </div>
+                            <div>
+                                <h1 class="text-3xl font-bold text-gray-800">Selamat Datang di RELI</h1>
+                                <p class="text-gray-600">Rangkuman Earnings Lintas-Industri untuk Driver Ojol</p>
                             </div>
                         </div>
                     </div>
-                </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                        <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <span class="text-4xl">📝</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-3">Mulai Catat Pendapatan Hari Ini</h2>
+                        <p class="text-gray-600 mb-2 max-w-md mx-auto">
+                            Belum ada data tersimpan. Input pendapatan harian Anda untuk mulai melihat
+                            statistik, analitik, dan rekomendasi pendapatan.
+                        </p>
+                        <p class="text-sm text-gray-500 mb-8 max-w-md mx-auto">
+                            RELI menghitung pendapatan kotor, biaya BBM, biaya tambahan, dan pendapatan bersih
+                            Anda secara otomatis dari data Grab, Maxim, Gojek, dan InDrive.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <button class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all" onclick="navigateTo('input')">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Input Data Hari Ini
+                            </button>
+                        </div>
+                    </div>
+                `
+                        : `
+                    <!-- Header Section -->
+                    <div class="mb-8">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                <span class="text-white text-2xl">📊</span>
+                            </div>
+                            <div>
+                                <h1 class="text-3xl font-bold text-gray-800">Dashboard RELI</h1>
+                                <p class="text-gray-600">Rangkuman Earnings Lintas-Industri untuk Driver Ojol</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Welcome Card -->
+                        <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-8 text-white shadow-xl">
+                            <div class="text-center">
+                                <h2 class="text-2xl lg:text-3xl font-bold mb-3">Selamat Datang di RELI</h2>
+                                <p class="text-lg opacity-90 mb-6">Dashboard AI-powered untuk mengoptimalkan pendapatan driver ojol</p>
+                                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                                    <button class="btn btn-white btn-lg gap-2 shadow-lg hover:shadow-xl transition-all" onclick="navigateTo('input')">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                        Input Data Hari Ini
+                                    </button>
+                                    <button class="btn btn-outline btn-white btn-lg gap-2 hover:bg-white hover:text-blue-600 transition-all" onclick="navigateTo('analytics')">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                        </svg>
+                                        Lihat Analytics
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                 <!-- Quick Stats -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -1028,6 +1110,8 @@ function renderDashboard() {
                         </button>
                     </div>
                 </div>
+                `
+                }
             </div>
         </div>
     `
