@@ -23,6 +23,9 @@ import {
 import { buildCSV } from './utils/export.js'
 import { debounce } from './utils/debounce.js'
 import { hasSavedRecords, resolveFuelDefault } from './utils/records.js'
+import { listSourceDates, copyRecordInputs } from './utils/copy-template.js'
+import { getSettings, saveSettings, clearSettings, resolveFuelDefaultWithProfile } from './utils/settings.js'
+import { validateInputs } from './utils/validation.js'
 
 // Register Chart.js components
 Chart.register(...registerables)
@@ -192,23 +195,26 @@ async function loadFromStorage(date = null, showMessage = false) {
         if (dataLoaded) {
             calculateResults()
         } else {
-            // D1: No saved record for this date — pre-fill fuel konsumsi/harga
-            // from the most recent valid record so the driver doesn't re-enter
-            // values that rarely change. Explicit current-day values (already
-            // in appData.fuel) take precedence; history inherits only when the
-            // current value is not a finite >0 number. Engine defaults remain
-            // the final fallback (calc.js constants are NOT modified).
+            // A1/D1: No saved record for this date — pre-fill fuel konsumsi/harga
+            // using the full precedence chain:
+            //   1. explicit current value
+            //   2. persistent user profile (reli-settings)
+            //   3. latest valid historical record
+            //   4. engine default (calc.js constants are NOT modified)
             const stored = localStorage.getItem('reli-data') || '{}'
-            appData.fuel.konsumsi = resolveFuelDefault({
+            const profile = getSettings(localStorage)
+            appData.fuel.konsumsi = resolveFuelDefaultWithProfile({
                 stored,
                 field: 'konsumsi',
                 currentValue: appData.fuel.konsumsi,
+                profileValue: profile.vehicleFuelEfficiency,
                 engineDefault: DEFAULT_KONSUMSI,
             })
-            appData.fuel.harga = resolveFuelDefault({
+            appData.fuel.harga = resolveFuelDefaultWithProfile({
                 stored,
                 field: 'harga',
                 currentValue: appData.fuel.harga,
+                profileValue: profile.defaultFuelPrice,
                 engineDefault: DEFAULT_HARGA,
             })
             // Recompute derived fuel fields (literTerpakai, biayaBBM) from the
@@ -229,6 +235,62 @@ async function loadFromStorage(date = null, showMessage = false) {
         if (showMessage) {
             showToast('Gagal memuat data', 'error')
         }
+    }
+}
+
+// A2: Copy a previous day's input fields into the current selected date.
+// Reads the source record (READ-ONLY), copies only raw input fields into
+// appData, recalculates results, and lets the existing D2 debounced
+// auto-save persist. The source record is never mutated.
+function copyFromPreviousDay(sourceDate) {
+    try {
+        const targetDate = document.getElementById('date-selector')?.value || new Date().toISOString().split('T')[0]
+
+        if (sourceDate === targetDate) {
+            showToast('Tanggal sumber sama dengan tanggal tujuan', 'warning')
+            return
+        }
+
+        const stored = localStorage.getItem('reli-data') || '{}'
+        let data
+        try {
+            data = JSON.parse(stored)
+        } catch {
+            showToast('Data lokal tidak dapat dibaca', 'error')
+            return
+        }
+
+        const source = data[sourceDate]
+        // Validate the source before copying (safety: invalid source = no-op).
+        if (!source) {
+            showToast(`Tidak ada data untuk ${sourceDate}`, 'warning')
+            return
+        }
+
+        // Deep-snapshot the source before copy to guarantee no mutation.
+        const sourceSnapshot = JSON.stringify(source)
+        copyRecordInputs(appData, source)
+        // Safety assertion: source must be unchanged (read-only).
+        if (JSON.stringify(source) !== sourceSnapshot) {
+            // Should never happen — copyRecordInputs never mutates source.
+            console.error('[RELI] copyFromPreviousDay: source mutation detected, aborting')
+            return
+        }
+
+        // Recompute derived fields (kotor/komisi/fuel/results) from inputs.
+        calculateResults()
+
+        // Re-render the input view to show copied values, then let D2 debounce
+        // handle persistence. Do NOT call saveToStorage directly — the user
+        // may want to adjust the copied values first.
+        if (currentView === 'input') {
+            renderCurrentView()
+        }
+
+        showToast(`Data disalin dari ${sourceDate}`, 'success')
+    } catch (error) {
+        console.error('[RELI] Error copying previous day:', error)
+        showToast('Gagal menyalin data', 'error')
     }
 }
 
@@ -392,6 +454,26 @@ function updateInputPageResults() {
                 </div>
             </div>
         `
+    }
+
+    // G2: Render non-blocking validation warnings inline. Warnings inform the
+    // user of suspicious input but never alter calculations or block saving.
+    const warningsContainer = document.getElementById('input-warnings')
+    if (warningsContainer) {
+        const warnings = validateInputs(appData)
+        if (warnings.length === 0) {
+            warningsContainer.innerHTML = ''
+        } else {
+            warningsContainer.innerHTML = warnings
+                .map(
+                    w => `
+                <div class="alert ${w.severity === 'warning' ? 'alert-warning' : 'alert-info'} mb-2 py-2 px-4 text-sm">
+                    <span>⚠️ ${w.message}</span>
+                </div>
+            `
+                )
+                .join('')
+        }
     }
 }
 
@@ -668,6 +750,27 @@ async function initializeCharts() {
         // Initialize earnings chart
         const earningsCanvas = document.getElementById('earningsChart')
         if (earningsCanvas) {
+            // B1: per-platform datasets (dashed, thinner) alongside the aggregate
+            // series. The data already comes from getDailyStats -> stats.platforms.
+            const platformColors = {
+                grab: 'rgb(34, 197, 94)',
+                maxim: 'rgb(251, 146, 60)',
+                gojek: 'rgb(59, 130, 246)',
+                indrive: 'rgb(147, 51, 234)',
+            }
+            const platformDatasets = ['grab', 'maxim', 'gojek', 'indrive'].map(p => ({
+                label: `${p.charAt(0).toUpperCase() + p.slice(1)} Kotor`,
+                data: dailyStats.platforms[p] || [],
+                borderColor: platformColors[p],
+                backgroundColor: 'transparent',
+                borderWidth: 1.5,
+                borderDash: [5, 3],
+                fill: false,
+                tension: 0.3,
+                pointRadius: 2,
+                hidden: true, // collapsed by default; user toggles via legend
+            }))
+
             new Chart(earningsCanvas, {
                 type: 'line',
                 data: {
@@ -700,6 +803,7 @@ async function initializeCharts() {
                             fill: false,
                             tension: 0.4,
                         },
+                        ...platformDatasets,
                     ],
                 },
                 options: {
@@ -1205,6 +1309,38 @@ function renderInputData() {
                                     </svg>
                                     Kemarin
                                 </button>
+                                ${
+                                    listSourceDates(
+                                        localStorage.getItem('reli-data') || '{}',
+                                        new Date().toISOString().split('T')[0]
+                                    ).length > 0
+                                        ? `
+                                    <div class="dropdown">
+                                        <label tabindex="0" class="btn btn-outline btn-sm gap-2 shadow-sm">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2v-2"></path>
+                                            </svg>
+                                            Salin dari
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </label>
+                                        <ul tabindex="0" class="dropdown-content menu bg-white rounded-box shadow-lg border border-gray-200 max-h-60 overflow-y-auto w-64 z-50">
+                                            ${listSourceDates(
+                                                localStorage.getItem('reli-data') || '{}',
+                                                document.getElementById('date-selector')?.value ||
+                                                    new Date().toISOString().split('T')[0]
+                                            )
+                                                .slice(0, 10)
+                                                .map(
+                                                    date => `
+                                                <li><a onclick="copyFromPreviousDay('${date}')" class="text-sm">${date}</a></li>
+                                            `
+                                                )
+                                                .join('')}
+                                        </ul>
+                                    </div>
+                                `
+                                        : ''
+                                }
                             </div>
                             <div class="form-control">
                                 <label class="label cursor-pointer justify-start gap-3">
@@ -1592,6 +1728,9 @@ function renderInputData() {
                             </div>
                         </div>
                     </div>
+
+                    <!-- G2: Validation warnings (non-blocking, inline) -->
+                    <div id="input-warnings" class="mb-6"></div>
 
                     <!-- Summary Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -2575,6 +2714,180 @@ async function renderLocation() {
     `
 }
 
+// A1: Render the Settings view with a real vehicle/fuel profile UI.
+// Replaces the previous placeholder. Reads/writes the persistent profile in
+// localStorage (reli-settings) and provides Save/Reset actions.
+function renderSettings() {
+    const profile = getSettings(localStorage)
+
+    return `
+        <div class="bg-gradient-to-br from-slate-50 to-blue-50" style="flex-1">
+            <!-- Mobile Header -->
+            <div class="navbar bg-white shadow-sm border-b lg:hidden">
+                <div class="navbar-start">
+                    <button class="btn btn-ghost btn-circle" onclick="toggleSidebar()">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="navbar-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white text-sm font-bold">⚙️</span>
+                        </div>
+                        <div class="text-lg font-bold text-gray-800">Settings</div>
+                    </div>
+                </div>
+                <div class="navbar-end">
+                    <div class="badge badge-sm ${isOnline ? 'badge-success' : 'badge-error'}">${isOnline ? 'Online' : 'Offline'}</div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="p-6">
+                <!-- Header Section -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-4 mb-2">
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <span class="text-white text-xl">⚙️</span>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-800">Pengaturan</h1>
+                            <p class="text-gray-600">Profil kendaraan dan preferensi bahan bakar</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicle Profile Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <span class="text-blue-600 text-sm">🏍️</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">Profil Kendaraan</h3>
+                            <p class="text-sm text-gray-600">Nilai ini digunakan sebagai default untuk input BBM harian</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium text-gray-700">Konsumsi BBM</span>
+                                <span class="label-text-alt text-gray-500">km/liter</span>
+                            </label>
+                            <input type="number"
+                                   class="input input-bordered input-lg bg-gray-50 border-gray-200 focus:border-blue-500 focus:bg-white text-right font-semibold"
+                                   id="setting-konsumsi"
+                                   placeholder="14"
+                                   min="0" step="0.1"
+                                   value="${profile.vehicleFuelEfficiency ?? ''}">
+                            <label class="label">
+                                <span class="label-text-alt text-gray-400">Biarkan kosong untuk menggunakan riwayat/default</span>
+                            </label>
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium text-gray-700">Harga BBM Default</span>
+                                <span class="label-text-alt text-gray-500">Rp/liter</span>
+                            </label>
+                            <input type="number"
+                                   class="input input-bordered input-lg bg-gray-50 border-gray-200 focus:border-blue-500 focus:bg-white text-right font-semibold"
+                                   id="setting-harga"
+                                   placeholder="10000"
+                                   min="0" step="100"
+                                   value="${profile.defaultFuelPrice ?? ''}">
+                            <label class="label">
+                                <span class="label-text-alt text-gray-400">Biarkan kosong untuk menggunakan riwayat/default</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3">
+                        <button class="btn btn-primary btn-sm gap-2 shadow-sm" onclick="saveVehicleProfile()">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Simpan Profil
+                        </button>
+                        <button class="btn btn-outline btn-sm gap-2" onclick="resetVehicleProfile()">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"></path>
+                            </svg>
+                            Reset Profil
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info Card -->
+                <div class="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span class="text-white text-sm">ℹ️</span>
+                        </div>
+                        <div class="text-sm text-blue-800">
+                            <p class="font-semibold mb-2">Prioritas Default BBM</p>
+                            <p class="mb-1">Saat membuat catatan baru, nilai BBM diisi dengan urutan:</p>
+                            <ol class="list-decimal ml-5 space-y-1">
+                                <li>Nilai yang Anda input langsung (selalu menang)</li>
+                                <li>Profil kendaraan yang disimpan di sini</li>
+                                <li>Catatan terakhir yang valid</li>
+                                <li>Default aplikasi (14 km/L, Rp 10.000/L)</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Management Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                            <span class="text-red-600 text-sm">🗑️</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">Manajemen Data</h3>
+                            <p class="text-sm text-gray-600">Hapus profil kendaraan</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline btn-error btn-sm gap-2" onclick="resetVehicleProfile()">
+                        Hapus Profil Kendaraan
+                    </button>
+                </div>
+            </div>
+        </div>
+    `
+}
+
+// A1: Save the vehicle profile from the Settings form inputs.
+function saveVehicleProfile() {
+    const konsumsi = toNumber(document.getElementById('setting-konsumsi')?.value)
+    const harga = toNumber(document.getElementById('setting-harga')?.value)
+    const profile = {
+        vehicleFuelEfficiency: konsumsi > 0 ? konsumsi : null,
+        defaultFuelPrice: harga > 0 ? harga : null,
+    }
+    const ok = saveSettings(localStorage, profile)
+    if (ok) {
+        showToast('Profil kendaraan berhasil disimpan', 'success')
+    } else {
+        showToast('Gagal menyimpan profil', 'error')
+    }
+}
+
+// A1: Reset/clear the vehicle profile from localStorage.
+function resetVehicleProfile() {
+    const ok = clearSettings(localStorage)
+    if (ok) {
+        showToast('Profil kendaraan direset', 'info')
+        if (currentView === 'settings') {
+            renderCurrentView()
+        }
+    } else {
+        showToast('Gagal mereset profil', 'error')
+    }
+}
+
 function renderSimpleView(title, icon, description) {
     return `
         <div class="bg-base-200" style="flex-1">
@@ -2622,7 +2935,10 @@ async function renderCurrentView() {
     content += renderSidebar()
 
     // Add main content area with proper layout
-    content += '<div class="flex-1 lg:ml-60">'
+    // UI/UX fix: removed lg:ml-60 — the sidebar is lg:relative (in flex flow)
+    // so an additional 240px left margin produced a double horizontal offset.
+    // On mobile the sidebar is fixed/off-canvas so no margin is needed either.
+    content += '<div class="flex-1">'
 
     switch (currentView) {
         case 'dashboard':
@@ -2641,7 +2957,7 @@ async function renderCurrentView() {
             content += await renderLocation()
             break
         case 'settings':
-            content += renderSimpleView('Settings', '⚙️', 'Pengaturan tema, bahasa, dan preferensi aplikasi')
+            content += renderSettings()
             break
         default:
             content += renderDashboard()
@@ -2795,6 +3111,9 @@ window.refreshOptimizer = refreshOptimizer
 window.toggleLocationTracking = toggleLocationTracking
 window.getCurrentLocation = getCurrentLocation
 window.clearLocationHistory = clearLocationHistory
+window.copyFromPreviousDay = copyFromPreviousDay
+window.saveVehicleProfile = saveVehicleProfile
+window.resetVehicleProfile = resetVehicleProfile
 
 // Prevent double initialization
 let appInitialized = false
